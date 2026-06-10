@@ -22,6 +22,30 @@ seeds via `src/yolo_waste_sorter/utils/seed.py` (seed 42 everywhere).
 - `paper.tex` + `refs.bib` -- the technical report (NeurIPS template, project root)
 - `notes/`, `research/`, `tasks/` -- /flow pipeline docs (notes+tasks gitignored)
 
+## Notebook discipline (manager-notebook architecture)
+
+Notebooks are MANAGERS, never code -- the ESPResso-V2 pattern
+(`github.com/tr4m0ryp/ESPResso-V2`; full rules in global memory
+`feedback/workflow/manager-notebooks.md`). Claude Code iterates on `.py` files
+far more effectively than on notebooks, so:
+
+- ALL logic lives in `src/yolo_waste_sorter/`; `notebooks/manager.ipynb` only
+  imports and calls it. Zero model/data-transform logic in any notebook.
+- Manager cell sequence: init + preflight validation -> repo clone/update
+  (Colab) -> data cache check -> smoke test -> checkpoint detection/resume ->
+  prepare data -> train (canary viability check, then full) -> evaluate ->
+  plots -> summary.
+- Must survive "Runtime > Run all" on a fresh Colab session: idempotent cells,
+  `subprocess.run(..., check=True)` over bare `!cmd`, validate package
+  importability instead of pinning Colab packages, device-agnostic torch.
+- When a `src/` signature changes, update the notebook call site in the same
+  edit (and vice versa).
+- Training scripts support `SMOKE_TEST=1`/`--smoke` (tiny CPU run through the
+  full cycle); every run appends to `experiments/runs.jsonl` (config, git
+  hash, metrics, runtime); checkpoints + plots persist to Drive on Colab.
+- Exploration notebooks stay separate and numbered (`01-explore-data.ipynb`)
+  and never feed the pipeline.
+
 ## Commands
 
 - `make paper` -- build the report (tectonic)
