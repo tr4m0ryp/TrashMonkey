@@ -8,6 +8,7 @@ exists primarily for tests).
 from __future__ import annotations
 
 import shutil
+import ssl
 import subprocess
 import urllib.error
 import urllib.parse
