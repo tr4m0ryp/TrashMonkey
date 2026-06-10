@@ -1,0 +1,483 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - table [ref=e3]:
+      - rowgroup [ref=e4]:
+        - row [ref=e5]:
+          - cell [ref=e6]:
+            - img [ref=e7]
+    - paragraph [ref=e8]
+    - table [ref=e9]:
+      - rowgroup [ref=e10]:
+        - row [ref=e11]:
+          - cell [ref=e12]
+          - cell "Home Database description Samples Term of use Download Pet recognition Contact" [ref=e13]:
+            - paragraph [ref=e14]:
+              - emphasis [ref=e15]:
+                - link "Home" [ref=e16] [cursor=pointer]:
+                  - /url: "#home"
+            - paragraph [ref=e17]:
+              - emphasis [ref=e18]:
+                - link "Database description" [ref=e19] [cursor=pointer]:
+                  - /url: "#database"
+            - paragraph [ref=e20]:
+              - emphasis [ref=e21]:
+                - link "Samples" [ref=e22] [cursor=pointer]:
+                  - /url: "#samples"
+            - paragraph [ref=e23]:
+              - emphasis [ref=e24]:
+                - link "Term of use" [ref=e25] [cursor=pointer]:
+                  - /url: "#term"
+            - paragraph [ref=e26]:
+              - emphasis [ref=e27]:
+                - link "Download" [ref=e28] [cursor=pointer]:
+                  - /url: "#download"
+            - paragraph [ref=e29]:
+              - emphasis [ref=e30]:
+                - link "Pet recognition" [ref=e31] [cursor=pointer]:
+                  - /url: petrecognition.html
+            - paragraph [ref=e32]:
+              - emphasis [ref=e33]:
+                - link "Contact" [ref=e34] [cursor=pointer]:
+                  - /url: "#kontakt"
+          - cell [ref=e35]:
+            - heading "Plastic Waste DataBase of Images – WaDaBa" [level=2] [ref=e36]
+            - paragraph [ref=e37]: The main purpose of this work was creation of a plastic waste database of images of objects constituting the typical contents of municipal waste. This group of waste can be automatically selected on the belts in waste sorting plant by using methods of Computer Vision. Digital images of items that will be processing should reflect the specific conditions of places where real objects wll be found. Thus, each thing is placed in this database should be presented in the course of several collections of images, taking into account different lighting conditions and different arrangement relative to the image recorder, and the different degree of deformation. Images created in the collection divided into groups based on the type of material from which individual objects were made.
+            - text: Recycling is one of the most important methods of environmental protection, the purpose of which is to reduce the amount of waste stored in landfills and conservation of natural resources. The term recycling means the recovery of raw materials, which consists in the transformation of substances or materials contained in waste in the production process to obtain the substance or material for reused or other purposes, including organic recycling, excluding energy recovery. In the last century significantly increased the amount of waste produced. At the same time appeared the possibility of their reuse and one noted that the waste put to landfill are not environmentally neutral. Some of them are extremely durable. For example, the decomposition of cotton material is 5 months, paper tissue - 3 month, aluminium cans - 100 years, plastic bag - 300 years. Taking into consideration the fact that the average man is producing the about 350 kg of waste annually, and that the pace of producing rubbish much is exceeding the pace of their disintegration, creating new garbage dumps is necessary. Here a problem of high building costs and a problem of environmental, social and economic influences appear. Effectively pursued politics of the waste management and re-using them allows us to prolong the operation of the landfill by up to 60\% and reduce the need for new landfills. The recycling should be more widely applied and promoted. However in order to apply the recycling a sorting of waste is necessary on the one can recyclable and on remaining. The establishment of a database of images of objects constituting the typical content of the municipal waste, produced by households, i.e. packages of different kind and everyday articles are a main our goal. Created in the framework of the project public database of waste images, becomes the starting point for research to develop methods for automatic sorting of waste with the use of modern techniques of image processing and recognition. The main motive for the creation of the work was the fact that not developed methods for automatic sorting of waste, using methods of pattern recognition. In search of reasons for this situation, it was noted that, despite the existence of several databases of images of various objects, among them no a database with waste images. Hence emerged the idea of creating a database of waste images. This database will be the basis for testing methods for automatic sorting of waste, and also will allow to compare the effectiveness of various methods. The European Union Directive 2008/98 / WE on waste management and applicable Polish law show that besides prevention of waste generation, the process of waste material recycling should have priority over the energy production as a result of high-energy waste combustion. It is assumed that successively in 2020, 2025 and 2030 recycling of packaging must achieve levels respectively 60%, 70% and 80%. Specialists, dealing with the issue of waste processing and disposal, agree, that increasing the level of automation and reducing the amount of work carried out manually will increase the efficiency both currently running waste management plants and plants built in the future, and also improve the purity of recyclables. In the case of searching for new solutions, which can improve the processes of sorting the municipal waste and recovering the secondary raw materials, the Computer Vision technology seems to be perspective.
+            - paragraph
+            - paragraph [ref=e38]:
+              - emphasis [ref=e39]:
+                - link "Home" [ref=e40] [cursor=pointer]:
+                  - /url: "#home"
+            - heading "WaDaBa - waste database" [level=3] [ref=e41]
+            - text: "We created the research position for acquiring images of waste. It comprise from: the platform, on which are put objects - wastes, the stand with a camera, and two type of light sources: the fluorescent lamp and LED-bulb. Waste were acquisition and photographed by four months in order to collect as the most typical kinds of the municipal waste."
+            - generic [ref=e42]:
+              - img [ref=e43]
+              - text: Fig. 1. Plastics type marks
+            - text: "The object were put on the research position and next photographed with first and second type of light. There were series carried out of 10 photographs with differ in the angle of the turnover for every object (in the vertical axis). Next the object was damaged to varying degrees: small, medium and large. For each type of destruction have been made 10 photographs. So considering all variants for every object 40 photographs were taken, multiplying it by the number of objects, 4 000 of photographs were created in the database."
+            - text: "The parameters of photographs:"
+            - list [ref=e44]:
+              - listitem [ref=e45]: size 1920x1277 of pixels
+              - listitem [ref=e46]: resolution 300 dpi
+              - listitem [ref=e47]: colour palette RBG 24 bits
+              - listitem [ref=e48]: file format JPG
+            - text: The single images have size about 1 MB, and the entire database of 4 GB. The acquired image have been saved onto the disk under the standardized name determining parameters of acquiring the image and type of waste. Sample images are shown in Fig 2.
+            - generic [ref=e49]:
+              - img [ref=e50]
+              - text: Fig. 2. WaDaBa sample images.
+            - text: It was assumed that the name of the each acquired picture should describe of photographed object in a simple form. In this way the easy choice of some iteresting objects will be possible in later stages of the research. For instance, objects with the medium level of damage or all bottles with a screw caps.
+            - paragraph [ref=e51]: "It was decided that the name of the photographed object will be coded as follows:"
+            - generic [ref=e52]: 0004 a01b05c2d0e1f0g1h1.jpg
+            - text: "where first four digits denotes the order number of the object and the next sections (a to h) described its properties such as:"
+            - list [ref=e53]:
+              - listitem [ref=e54]: "[a] - a number denoting the plastic type;"
+              - listitem [ref=e55]: "[b] - colour;"
+              - listitem [ref=e56]: "[c] - type of light;"
+              - listitem [ref=e57]: "[d] - the deformation level;"
+              - listitem [ref=e58]: "[e] - the level of a dirt;"
+              - listitem [ref=e59]: "[f] - presence of a screw cap or a lid;"
+              - listitem [ref=e60]: "[g] - presence of a ring - characteristic for the bottles with a screw caps;"
+              - listitem [ref=e61]: "[h] - order number of a random position of a photographed object."
+            - text: We also decided to use characters (as a name of a parameter) and digits (as a parameter value) to make the easier to understand it for the human - quickly, without a computer. In the table 1 the established values of defined parameters are presented.
+            - paragraph [ref=e62]: Table 1. Values of parameters used encoding of the names of photographed objects
+            - table [ref=e63]:
+              - rowgroup [ref=e64]:
+                - row "parameter parameter values" [ref=e65]:
+                  - cell "parameter" [ref=e66]
+                  - cell "parameter values" [ref=e67]
+                - row "a plastic type 00 - missing or unreadable identifier 01 - PET - polyethylene terephthalate 02 - PE-HD - high-density polyethylene 03 - PVC - polyvinyl chloride 04 - PE-LD - low-density polyethylene 05 - PP - polypropylene 06 - PS - polystyrene 07 - Other" [ref=e68]:
+                  - cell "a plastic type" [ref=e69]:
+                    - text: a
+                    - text: plastic type
+                  - cell "00 - missing or unreadable identifier 01 - PET - polyethylene terephthalate 02 - PE-HD - high-density polyethylene 03 - PVC - polyvinyl chloride 04 - PE-LD - low-density polyethylene 05 - PP - polypropylene 06 - PS - polystyrene 07 - Other" [ref=e70]:
+                    - text: 00 - missing or unreadable identifier
+                    - text: 01 - PET - polyethylene terephthalate
+                    - text: 02 - PE-HD - high-density polyethylene
+                    - text: 03 - PVC - polyvinyl chloride
+                    - text: 04 - PE-LD - low-density polyethylene
+                    - text: 05 - PP - polypropylene
+                    - text: 06 - PS - polystyrene
+                    - text: 07 - Other
+                - row "b colour 00 - transparent 01 - white 02 - red 03 - green 04 - blue 05 - yellow 06 - orange 07 - purple 08 - brown 09 - grey 10 - black 99 - other" [ref=e71]:
+                  - cell "b colour" [ref=e72]:
+                    - text: b
+                    - text: colour
+                  - cell "00 - transparent 01 - white 02 - red 03 - green 04 - blue 05 - yellow 06 - orange 07 - purple 08 - brown 09 - grey 10 - black 99 - other" [ref=e73]:
+                    - text: 00 - transparent
+                    - text: 01 - white
+                    - text: 02 - red
+                    - text: 03 - green
+                    - text: 04 - blue
+                    - text: 05 - yellow
+                    - text: 06 - orange
+                    - text: 07 - purple
+                    - text: 08 - brown
+                    - text: 09 - grey
+                    - text: 10 - black
+                    - text: 99 - other
+                - row "c light 1 - scattered light of fluorescent lamp 2 - warm LED light reflector." [ref=e74]:
+                  - cell "c light" [ref=e75]:
+                    - text: c
+                    - text: light
+                  - cell "1 - scattered light of fluorescent lamp 2 - warm LED light reflector." [ref=e76]:
+                    - text: 1 - scattered light of fluorescent lamp
+                    - text: 2 - warm LED light reflector.
+                - row "d deformation 0 - undeformed 1 - small deformation 2 - medium deformation 3 - high deformation" [ref=e77]:
+                  - cell "d deformation" [ref=e78]:
+                    - text: d
+                    - text: deformation
+                  - cell "0 - undeformed 1 - small deformation 2 - medium deformation 3 - high deformation" [ref=e79]:
+                    - text: 0 - undeformed
+                    - text: 1 - small deformation
+                    - text: 2 - medium deformation
+                    - text: 3 - high deformation
+                - row "e dirtiness 0 - clean 1 - small dirt 2 - medium dirt 3 - hight dirt" [ref=e80]:
+                  - cell "e dirtiness" [ref=e81]:
+                    - text: e
+                    - text: dirtiness
+                  - cell "0 - clean 1 - small dirt 2 - medium dirt 3 - hight dirt" [ref=e82]:
+                    - text: 0 - clean
+                    - text: 1 - small dirt
+                    - text: 2 - medium dirt
+                    - text: 3 - hight dirt
+                - row "f screw cap or lid 0 - lack 1 - occurs" [ref=e83]:
+                  - cell "f screw cap or lid" [ref=e84]:
+                    - text: f
+                    - text: screw cap or lid
+                  - cell "0 - lack 1 - occurs" [ref=e85]:
+                    - text: 0 - lack
+                    - text: 1 - occurs
+                - row "g ring 0 - lack 1 - occurs" [ref=e86]:
+                  - cell "g ring" [ref=e87]:
+                    - text: g
+                    - text: ring
+                  - cell "0 - lack 1 - occurs" [ref=e88]:
+                    - text: 0 - lack
+                    - text: 1 - occurs
+                - row "h random position 0, ... , 4." [ref=e89]:
+                  - cell "h random position" [ref=e90]:
+                    - text: h
+                    - text: random position
+                  - cell "0, ... , 4." [ref=e91]
+            - paragraph
+            - paragraph [ref=e92]:
+              - emphasis [ref=e93]:
+                - link "Home" [ref=e94] [cursor=pointer]:
+                  - /url: "#home"
+            - text: Table 2. Database statistics
+            - table [ref=e95]:
+              - rowgroup [ref=e96]:
+                - row "Number of set \\ code PET PE-HD PVC PE-LD PP PS other" [ref=e97]:
+                  - columnheader "Number of set \\ code" [ref=e98]
+                  - columnheader "PET" [ref=e99]
+                  - columnheader "PE-HD" [ref=e100]
+                  - columnheader "PVC" [ref=e101]
+                  - columnheader "PE-LD" [ref=e102]
+                  - columnheader "PP" [ref=e103]
+                  - columnheader "PS" [ref=e104]
+                  - columnheader "other" [ref=e105]
+                - row "1 5" [ref=e106]:
+                  - cell "1" [ref=e107]
+                  - cell "5" [ref=e108]
+                  - cell [ref=e109]
+                  - cell [ref=e110]
+                  - cell [ref=e111]
+                  - cell [ref=e112]
+                  - cell [ref=e113]
+                  - cell [ref=e114]
+                - row "2 2 1 2" [ref=e115]:
+                  - cell "2" [ref=e116]
+                  - cell "2" [ref=e117]
+                  - cell "1" [ref=e118]
+                  - cell [ref=e119]
+                  - cell [ref=e120]
+                  - cell [ref=e121]
+                  - cell "2" [ref=e122]
+                  - cell [ref=e123]
+                - row "3 3 2" [ref=e124]:
+                  - cell "3" [ref=e125]
+                  - cell "3" [ref=e126]
+                  - cell [ref=e127]
+                  - cell [ref=e128]
+                  - cell [ref=e129]
+                  - cell "2" [ref=e130]
+                  - cell [ref=e131]
+                  - cell [ref=e132]
+                - row "4 2 1 1 1" [ref=e133]:
+                  - cell "4" [ref=e134]
+                  - cell "2" [ref=e135]
+                  - cell [ref=e136]
+                  - cell [ref=e137]
+                  - cell [ref=e138]
+                  - cell "1" [ref=e139]
+                  - cell "1" [ref=e140]
+                  - cell "1" [ref=e141]
+                - row "5 2 2 1" [ref=e142]:
+                  - cell "5" [ref=e143]
+                  - cell "2" [ref=e144]
+                  - cell "2" [ref=e145]
+                  - cell [ref=e146]
+                  - cell [ref=e147]
+                  - cell "1" [ref=e148]
+                  - cell [ref=e149]
+                  - cell [ref=e150]
+                - row "6 4 1" [ref=e151]:
+                  - cell "6" [ref=e152]
+                  - cell "4" [ref=e153]
+                  - cell [ref=e154]
+                  - cell [ref=e155]
+                  - cell [ref=e156]
+                  - cell [ref=e157]
+                  - cell "1" [ref=e158]
+                  - cell [ref=e159]
+                - row "7 2 3" [ref=e160]:
+                  - cell "7" [ref=e161]
+                  - cell "2" [ref=e162]
+                  - cell [ref=e163]
+                  - cell [ref=e164]
+                  - cell [ref=e165]
+                  - cell [ref=e166]
+                  - cell "3" [ref=e167]
+                  - cell [ref=e168]
+                - row "8 2 1 2" [ref=e169]:
+                  - cell "8" [ref=e170]
+                  - cell "2" [ref=e171]
+                  - cell "1" [ref=e172]
+                  - cell [ref=e173]
+                  - cell [ref=e174]
+                  - cell "2" [ref=e175]
+                  - cell [ref=e176]
+                  - cell [ref=e177]
+                - row "9 3 2" [ref=e178]:
+                  - cell "9" [ref=e179]
+                  - cell "3" [ref=e180]
+                  - cell [ref=e181]
+                  - cell [ref=e182]
+                  - cell [ref=e183]
+                  - cell [ref=e184]
+                  - cell "2" [ref=e185]
+                  - cell [ref=e186]
+                - row "10 4 1" [ref=e187]:
+                  - cell "10" [ref=e188]
+                  - cell "4" [ref=e189]
+                  - cell [ref=e190]
+                  - cell [ref=e191]
+                  - cell [ref=e192]
+                  - cell "1" [ref=e193]
+                  - cell [ref=e194]
+                  - cell [ref=e195]
+                - row "11 4 1" [ref=e196]:
+                  - cell "11" [ref=e197]
+                  - cell "4" [ref=e198]
+                  - cell [ref=e199]
+                  - cell [ref=e200]
+                  - cell [ref=e201]
+                  - cell "1" [ref=e202]
+                  - cell [ref=e203]
+                  - cell [ref=e204]
+                - row "12 3 2" [ref=e205]:
+                  - cell "12" [ref=e206]
+                  - cell "3" [ref=e207]
+                  - cell [ref=e208]
+                  - cell [ref=e209]
+                  - cell [ref=e210]
+                  - cell [ref=e211]
+                  - cell "2" [ref=e212]
+                  - cell [ref=e213]
+                - row "13 1 4" [ref=e214]:
+                  - cell "13" [ref=e215]
+                  - cell "1" [ref=e216]
+                  - cell "4" [ref=e217]
+                  - cell [ref=e218]
+                  - cell [ref=e219]
+                  - cell [ref=e220]
+                  - cell [ref=e221]
+                  - cell [ref=e222]
+                - row "14 4 1" [ref=e223]:
+                  - cell "14" [ref=e224]
+                  - cell "4" [ref=e225]
+                  - cell [ref=e226]
+                  - cell [ref=e227]
+                  - cell [ref=e228]
+                  - cell "1" [ref=e229]
+                  - cell [ref=e230]
+                  - cell [ref=e231]
+                - row "15 3 1 1" [ref=e232]:
+                  - cell "15" [ref=e233]
+                  - cell "3" [ref=e234]
+                  - cell "1" [ref=e235]
+                  - cell [ref=e236]
+                  - cell [ref=e237]
+                  - cell [ref=e238]
+                  - cell "1" [ref=e239]
+                  - cell [ref=e240]
+                - row "16 1 3 1" [ref=e241]:
+                  - cell "16" [ref=e242]
+                  - cell "1" [ref=e243]
+                  - cell "3" [ref=e244]
+                  - cell [ref=e245]
+                  - cell [ref=e246]
+                  - cell "1" [ref=e247]
+                  - cell [ref=e248]
+                  - cell [ref=e249]
+                - row "17 4 1" [ref=e250]:
+                  - cell "17" [ref=e251]
+                  - cell "4" [ref=e252]
+                  - cell [ref=e253]
+                  - cell [ref=e254]
+                  - cell [ref=e255]
+                  - cell "1" [ref=e256]
+                  - cell [ref=e257]
+                  - cell [ref=e258]
+                - row "18 4 1" [ref=e259]:
+                  - cell "18" [ref=e260]
+                  - cell "4" [ref=e261]
+                  - cell [ref=e262]
+                  - cell [ref=e263]
+                  - cell [ref=e264]
+                  - cell "1" [ref=e265]
+                  - cell [ref=e266]
+                  - cell [ref=e267]
+                - row "19 3 1 1" [ref=e268]:
+                  - cell "19" [ref=e269]
+                  - cell "3" [ref=e270]
+                  - cell [ref=e271]
+                  - cell [ref=e272]
+                  - cell [ref=e273]
+                  - cell "1" [ref=e274]
+                  - cell "1" [ref=e275]
+                  - cell [ref=e276]
+                - row "20 1 3 1" [ref=e277]:
+                  - cell "20" [ref=e278]
+                  - cell "1" [ref=e279]
+                  - cell "3" [ref=e280]
+                  - cell [ref=e281]
+                  - cell [ref=e282]
+                  - cell "1" [ref=e283]
+                  - cell [ref=e284]
+                  - cell [ref=e285]
+                - row "Tatal 57 15 0 0 14 13 1" [ref=e286]:
+                  - cell "Tatal" [ref=e287]
+                  - cell "57" [ref=e288]
+                  - cell "15" [ref=e289]
+                  - cell "0" [ref=e290]
+                  - cell "0" [ref=e291]
+                  - cell "14" [ref=e292]
+                  - cell "13" [ref=e293]
+                  - cell "1" [ref=e294]
+            - paragraph
+            - heading "Term of use" [level=3] [ref=e295]
+            - text: "To get WaDaba, follow these steps:"
+            - generic [ref=e296]:
+              - listitem [ref=e297]:
+                - text: Download the contract
+                - link "form" [ref=e298] [cursor=pointer]:
+                  - /url: form.pdf
+                - text: .
+              - listitem [ref=e299]: Complete and sign the contract form.
+              - listitem [ref=e300]: The contract form must include the stamp of your institution.
+              - listitem [ref=e301]: Send an electronic copy to januszb(at)icis.pcz.pl,
+              - listitem [ref=e302]: Wait for a reply email with the password to the archives.
+            - heading "Download" [level=3] [ref=e303]
+            - text: "The WaDaba Images Database is free of charges. You could use it if you cite:"
+            - listitem [ref=e304]:
+              - text: Bobulski J., Piatkowski J., PET waste classification method and Plastic Waste DataBase WaDaBa, Conference Proc. IP&C 2018, Advances in Intelligent Systems and Computing, vol. 681, Springer Verlag, 2018, pp.57-64.
+              - link "PDF" [ref=e305] [cursor=pointer]:
+                - /url: JBJP_ipc2017.pdf
+            - listitem [ref=e306]:
+              - text: "Bobulski J., Kubanek M., Deep Learning for Plastic Waste Classification System, Applied Computational Intelligence and Soft Computing, 2021, art. no. 6626948 DOI: 10.1155/2021/6626948"
+              - link "PDF" [ref=e307] [cursor=pointer]:
+                - /url: https://www.researchgate.net/publication/355379258_Deep_Learning_for_Plastic_Waste_Classification_System
+              - text: ">"
+            - text: Archives are protected by password. If You want get it please fill
+            - link "form" [ref=e308] [cursor=pointer]:
+              - /url: form.pdf
+            - text: and sent to us.
+            - text: "Sets of images:"
+            - link "Set 1" [ref=e309] [cursor=pointer]:
+              - /url: data\WaDaBa_1-5.zip
+            - text: ","
+            - link "Set 2" [ref=e310] [cursor=pointer]:
+              - /url: data\WaDaBa_6-10.zip
+            - text: ","
+            - link "Set 3" [ref=e311] [cursor=pointer]:
+              - /url: data\WaDaBa_11-15.zip
+            - text: ","
+            - link "Set 4" [ref=e312] [cursor=pointer]:
+              - /url: data\WaDaBa_16-20.zip
+            - text: ","
+            - link "Set 5" [ref=e313] [cursor=pointer]:
+              - /url: data\WaDaBa_21-25.zip
+            - text: ","
+            - link "Set 6" [ref=e314] [cursor=pointer]:
+              - /url: data\WaDaBa_26-30.zip
+            - text: ","
+            - link "Set 7" [ref=e315] [cursor=pointer]:
+              - /url: data\WaDaBa_31-35.zip
+            - text: ","
+            - link "Set 8" [ref=e316] [cursor=pointer]:
+              - /url: data\WaDaBa_36-40.zip
+            - text: ","
+            - link "Set 9" [ref=e317] [cursor=pointer]:
+              - /url: data\WaDaBa_41-45.zip
+            - text: ","
+            - link "Set 10" [ref=e318] [cursor=pointer]:
+              - /url: data\WaDaBa_46-50.zip
+            - text: ","
+            - link "Set 11" [ref=e319] [cursor=pointer]:
+              - /url: data\WaDaBa_51-55.zip
+            - text: ","
+            - link "Set 12" [ref=e320] [cursor=pointer]:
+              - /url: data\WaDaBa_56-60.zip
+            - text: ","
+            - link "Set 13" [ref=e321] [cursor=pointer]:
+              - /url: data\WaDaBa_61-65.zip
+            - text: ","
+            - link "Set 14" [ref=e322] [cursor=pointer]:
+              - /url: data\WaDaBa_66-70.zip
+            - text: ","
+            - link "Set 15" [ref=e323] [cursor=pointer]:
+              - /url: data\WaDaBa_71-75.zip
+            - text: ","
+            - link "Set 16" [ref=e324] [cursor=pointer]:
+              - /url: data\WaDaBa_76-80.zip
+            - text: ","
+            - link "Set 17" [ref=e325] [cursor=pointer]:
+              - /url: data\WaDaBa_81-85.zip
+            - text: ","
+            - link "Set 18" [ref=e326] [cursor=pointer]:
+              - /url: data\WaDaBa_86-90.zip
+            - text: ","
+            - link "Set 19" [ref=e327] [cursor=pointer]:
+              - /url: data\WaDaBa_91-95.zip
+            - text: ","
+            - link "Set 20" [ref=e328] [cursor=pointer]:
+              - /url: data\WaDaBa_96-100.zip
+            - text: .
+            - text: You can compare your method to the others
+            - link "here" [ref=e329] [cursor=pointer]:
+              - /url: petrecognition.html#Comparison
+            - text: .
+            - paragraph [ref=e330]:
+              - emphasis [ref=e331]:
+                - link "Home" [ref=e332] [cursor=pointer]:
+                  - /url: "#home"
+            - text: "Authors:"
+            - text: Janusz Bobulski
+            - text: januszb(at)icis.pcz.pl
+            - text: Jacek Piatkowski
+            - text: Czestochowa University of Technology
+            - text: 73 Dabrowskiego Str.
+            - text: 42-201 Czestochowa
+            - text: Poland
+            - paragraph [ref=e333]:
+              - emphasis [ref=e334]:
+                - link "Home" [ref=e335] [cursor=pointer]:
+                  - /url: "#home"
+  - paragraph [ref=e336]:
+    - emphasis [ref=e337]:
+      - link "Database" [ref=e338] [cursor=pointer]:
+        - /url: http://garbage.eu5.org/
+  - paragraph [ref=e339]:
+    - emphasis [ref=e340]:
+      - link "Greenpeace" [ref=e341] [cursor=pointer]:
+        - /url: https://www.greenpeace.org/international/
