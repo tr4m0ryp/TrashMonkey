@@ -8,10 +8,13 @@ dependencies = [
     "pyyaml>=6,<7",
     "albumentations>=2.0,<3",
     "imagehash>=4.3,<5",
+    # Visualization module (figures are product code, not research-only).
+    "matplotlib>=3.8,<4",
+    "seaborn>=0.13,<0.14",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "mypy", "ruff"]
+dev = ["pytest", "mypy", "ruff", "types-PyYAML"]
 research = ["numpy", "pandas", "matplotlib", "jupyter"]
 # Auto-boxing chain (T3). rembg's BiRefNet session ships in the base package
 # (>=2.0.59); the [cpu] extra supplies onnxruntime (swap in onnxruntime-gpu
@@ -30,7 +33,8 @@ strict = true
 
 [[tool.mypy.overrides]]
 # Untyped / optional third-party imports: PyYAML ships no stubs; numpy/torch
-# are optional imports in utils.seed; the boxing deps are lazy imports.
+# are optional imports in utils.seed; the boxing deps are lazy imports;
+# seaborn ships no py.typed marker.
 module = [
     "yaml",
     "numpy",
@@ -46,6 +50,8 @@ module = [
     "autodistill_grounding_dino",
     "rembg",
     "imagehash",
+    "seaborn",
+    "seaborn.*",
 ]
 ignore_missing_imports = true
 
