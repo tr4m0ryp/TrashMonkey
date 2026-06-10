@@ -76,7 +76,8 @@ def test_augment_esp32_stack(config: Config) -> None:
 
 def test_eval_section(config: Config) -> None:
     assert config.eval.val_fraction is None
-    assert config.eval.leave_out_source is None
+    # T6: TEST-1 leave-one-source-out holdout picked by the census (T2).
+    assert config.eval.leave_out_source == "realwaste"
     assert config.eval.test2_severities == (1, 2, 3, 4, 5)
 
 
