@@ -23,3 +23,12 @@ def set_seed(seed: int = 42) -> None:
         torch.cuda.manual_seed_all(seed)
     except ImportError:
         pass
+<<<<<<< HEAD
+=======
+
+
+def load_config(path: str | Path = "configs/config.yaml") -> dict[str, Any]:
+    with open(path) as f:
+        config: dict[str, Any] = yaml.safe_load(f)
+    return config
+>>>>>>> agent/agent-aaf5ec144e4997d51
