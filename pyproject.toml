@@ -61,3 +61,6 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "slow: end-to-end smoke runs (deselect with -m 'not slow')",
+]
