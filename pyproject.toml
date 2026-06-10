@@ -18,5 +18,11 @@ line-length = 100
 [tool.mypy]
 strict = true
 
+# Optional runtime deps probed via try/import in utils/seed.py; not installed
+# in the lint environment.
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*", "torch", "torch.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
