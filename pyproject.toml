@@ -18,5 +18,12 @@ line-length = 100
 [tool.mypy]
 strict = true
 
+[[tool.mypy.overrides]]
+# Untyped third-party imports: PyYAML ships no stubs; numpy/torch are optional
+# imports in utils.seed and absent from lint environments.
+module = ["yaml", "numpy", "torch"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
