@@ -749,8 +749,42 @@ the closest public analogue to our deployment presentation.
 **Takeaway:** Confidence = per-class sigmoid only; what the T9 threshold
 actually thresholds.
 
-<!-- Census references (dataset pages, licenses, overlap evidence) land here
-     as R16+ when the census agent reports. -->
+### R16: Dataset census canonical pages
+**Source:** https://github.com/garythung/trashnet ;
+https://www.kaggle.com/datasets/arkadiyhacks/drinking-waste-classification ;
+https://www.kaggle.com/datasets/viswaprakash1990/garbage-detection ;
+https://universe.roboflow.com/material-identification/garbage-classification-3 ;
+https://archive.ics.uci.edu/dataset/908/realwaste ;
+https://www.kaggle.com/datasets/alistairking/recyclable-and-household-waste-classification
+**Takeaway:** The five ingested sources with licenses MIT / CC0 / CC BY 4.0 /
+CC BY 4.0+MIT / CC BY 4.0. Counts verified by file enumeration 2026-06-10.
+
+### R17: RealWaste paper (clean-vs-real quantification)
+**Source:** https://www.mdpi.com/2078-2489/14/12/633
+**Takeaway:** 49.69% (pristine-trained) vs 89.19% (in-domain-trained) in a
+real environment -- the cleanest number for waste domain shift; grounds T2 and
+the choice of RealWaste as TEST-1.
+
+### R18: ZeroWaste (CVPR 2022)
+**Source:** https://arxiv.org/abs/2106.02740
+**Takeaway:** Documents the solid-background <-> cluttered-conveyor domain
+boundary as disqualifying; CC BY-NC (also why it is excluded).
+
+### R19: TACO
+**Source:** http://tacodataset.org/ ; https://arxiv.org/abs/2003.06975
+**Takeaway:** 1,500 imgs/60 categories, in-the-wild, per-image Flickr
+licenses; excluded from training by domain evidence (F19) and license
+complexity.
+
+### R20: Excluded/reserve sources
+**Source:** http://wadaba.pcz.pl/ ;
+https://www.kaggle.com/datasets/mostafaabla/garbage-classification ;
+https://www.kaggle.com/datasets/sumn2u/garbage-classification-v2 ;
+https://www.kaggle.com/datasets/techsash/waste-classification-data ;
+https://github.com/sarahmfrost/compostnet ; https://github.com/fruits-360
+**Takeaway:** Each excluded with a stated reason (gated access, copyleft,
+lineage duplication, missing license, off-domain); kept in the paper's
+excluded-with-reason table.
 
 ## Discarded Approaches
 
