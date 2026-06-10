@@ -886,3 +886,23 @@ until thresholds.yaml lands)
 **P5 -- Paper integration** (continuous; scribe is active)
 - Label-mapping + license tables (P1 outputs), recipe + results tables
   (P2/P3), deployment numbers (P4), limitations (proxy-eval caveat, F10).
+
+## Implementation Log
+
+2026-06-10 -- Built via /flow:readyforlaunch: 16 tasks in 5 groups (18 Fable 5
+agents incl. two session-limit restarts), worktree-isolated, merged group by
+group. Final state: 100 source files, 267 tests, ruff + mypy --strict clean,
+`FAKE_MODEL=1 make smoke` green end to end (download -> remap -> autobox ->
+qa -> dedup -> balance -> split -> train -> evaluate -> thresholds).
+Acceptance verdict: **YELLOW** -- every machine-testable criterion PASS
+(including a real TrashNet fetch whose per-class counts matched the census
+exactly; sha256 pinned), with hardware-bound items BLOCKED by design: real GPU
+training (run `notebooks/manager.ipynb` on Colab), real auto-box labeling run
+(CUDA), TensorRT export + camera ingest (Jetson + ESP32 rig). Full report:
+`.claude/acceptance/yolo11-waste-detection-finetune/report.md`.
+Notable build findings: the ultralytics `augmentations=` injection hook lands
+in 8.3.226 (guarded at train time); `optimizer='auto'`/`cache='ram'`/`batch=-1`
+are blocked by code guards per F1/F4; the deploy runtime imports the tuner's
+`consensus_decision` -- one rule, two consumers. Known gap carried forward:
+`train()` has no resume parameter (interrupted Colab runs restart fresh;
+checkpoints persist to Drive).
