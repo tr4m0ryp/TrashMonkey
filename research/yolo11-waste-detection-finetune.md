@@ -287,6 +287,136 @@ snapshot for the YOLO11 table).
 later lever, never imgsz reduction; yolo11s (7.3 ms) also fits the budget if
 escalation triggers.
 
+### F7: The OV2640 deployment signature is known and simulable
+**Finding:** ESP32-CAM (OV2640): SVGA 800x600 streams at ~8.25 fps measured
+(stock firmware, ~27 KB JPEG); UXGA only 1.29 fps. SNR 40 dB, AGC noise under
+indoor light, on-chip JPEG with visible blocking at streaming quality, AWB
+green/warm drift ("first frames dark and greenish"), fixed-focus ~65 degree
+lens, rolling shutter. Undervoltage (<2.985 V) measurably degrades fps.
+**Evidence:** OV2640 datasheet; arXiv:2505.24081 (measured fps benchmark);
+Random Nerd Tutorials settings guide; espressif/esp32-camera issues #150/#185.
+**Implications:** Train-time degradation stack (T5) and the degraded-copy eval
+(T6) target these exact defects; cameras run SVGA, never UXGA; solid 5 V supply
+and a dedicated 2.4 GHz AP are deployment requirements.
+
+### F8: Corruption-style augmentation demonstrably closes camera-quality gaps
+**Finding:** Detectors lose 30-60% of clean performance under noise/blur/
+digital corruption; corruption-targeted training augmentation substantially
+restores it, and tuned Gaussian/speckle noise augmentation is a SOTA-level
+robustness baseline. Severity tuning matters: over-strong corruptions fail to
+generalize -- but our deployment corruptions are KNOWN, so we target them.
+**Evidence:** Michaelis et al. arXiv:1907.07484; Rusak et al. arXiv:2001.06057;
+Dodge & Karam arXiv:1604.04004; Kitware nrtk-albumentations.
+**Implications:** The T5 Albumentations stack is evidence-backed, with
+severities matched to F7 measurements rather than generic presets.
+
+### F9: Random-split validation is highly overoptimistic vs unseen sources
+**Finding:** Train/test on the same source inflates scores (dataset-bias
+literature since Torralba & Efros 2011); multi-source studies call random-split
+estimates "highly overoptimistic" vs leave-source-out; waste-specific reviews
+document TACO/TrashNet domain shift and call cross-dataset eval essential.
+With no target-domain data, training-domain validation is the standard
+model-selection criterion (DomainBed).
+**Evidence:** arXiv:2403.15012; arXiv:2007.01434 (DomainBed); PMC12115937
+(waste review); arXiv:2503.02241.
+**Implications:** The three-tier eval in T6: VAL (selection ceiling), TEST-1
+(leave-one-source-out), TEST-2 (degraded copies).
+
+### F10: Degraded-copy evaluation is established deployment-proxy practice
+**Finding:** ImageNet-C / Pascal-C / COCO-C are exactly "corrupted copies of
+the val set as robustness proxy"; MMDetection ships tooling for it; a 2024
+IJCV benchmark builds corruptions from real camera-sensor/ISP damage models.
+**Evidence:** Hendrycks & Dietterich arXiv:1903.12261; Michaelis et al.
+arXiv:1907.07484; Springer s11263-024-02096-6.
+**Implications:** TEST-2 has direct precedent; report 3-5 severity levels as a
+curve; state the proxy-imperfection caveat in the paper.
+
+### F11: The ESP32-CAM is the system bottleneck, not the Orin
+**Finding:** Per-frame on-Jetson cost is ~12-25 ms (decode + preprocess +
+4.91 ms infer + post), so a 3-camera round-robin cycle is ~45-75 ms and the
+GPU could serve each camera at 13-22 Hz -- but stock cameras produce ~8 fps.
+End-to-end glass-to-decision: ~90-160 ms typical, ~0.5 s worst (WiFi jitter).
+A 5-frame consensus completes in ~0.6 s against the 1-2 s conveyor budget.
+**Evidence:** arXiv:2505.24081 (camera fps); Ultralytics Jetson benchmarks;
+turbojpeg decode measurements.
+**Implications:** No exotic runtime needed (plain Python + threads); 8-16
+fresh frames per camera per conveyor window makes the T9 consensus rule
+comfortable; camera firmware/network, not the model, is where latency risk
+lives.
+
+### F12: YOLOv8/11 confidence is a raw per-class sigmoid with no objectness
+**Finding:** The v8/v11 anchor-free decoupled head has no objectness branch;
+inference confidence is the per-class sigmoid score (multi-label, not
+softmax-normalized). Detectors are systematically miscalibrated/overconfident;
+per-class calibration differs under class imbalance (+1.7 AP on LVIS from
+per-class calibration).
+**Evidence:** ultralytics/nn/modules/head.py (source); maintainer confirmations
+in issues #6214/#3707; arXiv:2210.02935; arXiv:2004.13546; arXiv:2102.01066.
+**Implications:** A fixed threshold is not a probability statement; per-class
+thresholds become worthwhile when per-class calibration diverges (T9 decision
+criterion: >0.1 spread in the precision>=0.95 confidence across classes).
+
+### F13: Naive score thresholding leaks 71-81% of unknown objects
+**Finding:** At 95% true-positive rate on known classes, max-score rejection
+lets 70.99-80.94% of out-of-distribution objects through (FPR95, VOS
+benchmark); unknowns are often confidently misclassified as the nearest known
+class. Energy scores improve this but need pre-sigmoid logits (invasive on
+TensorRT).
+**Evidence:** Dhamija et al. WACV 2020 (IEEE 9093355); VOS ICLR 2022
+arXiv:2202.01197; arXiv:2412.20701.
+**Implications:** Single-frame thresholding cannot be the rest-bin mechanism;
+the multi-frame consensus rule (T9) is the strongest stock-pipeline defense;
+the rest bin must be sized assuming imperfect rejection -- a wilderness probe
+set goes into validation.
+
+### F14: Multi-frame majority voting has direct conveyor precedent and quantified gains
+**Finding:** YOLOv8 + ByteTrack + per-track majority vote is published for
+conveyor inspection (frame predictions fluctuate under motion blur/lighting;
+track-level aggregation stabilizes); K-frame voting lifted accuracy 89->91%
+and F1 0.80->0.83 (K=10->50) with diminishing returns; consensus converts
+per-frame error to per-object error roughly binomially.
+**Evidence:** arXiv:2602.19278; arXiv:2503.04139; arXiv:1706.03309;
+docs.ultralytics.com/modes/track/.
+**Implications:** Lower per-frame threshold + agreement rule dominates one
+high threshold (same contamination protection, lower rest-rate); on a
+single-file belt, frame-to-object association is trivial without a tracker.
+
+### F15: Contrast-based bbox methods fail white-on-white; Grounding DINO does not
+**Finding:** ~24% of TrashNet is paper on white posterboard. Otsu collapses on
+non-bimodal histograms; GrabCut mislabels low-contrast fg/bg; rembg/U2-Net
+leaves shadows/gaps on white-on-white (documented). No published classical
+pipeline succeeded on raw TrashNet -- Stanford precedents hand-cropped instead.
+Grounding DINO (Apache-2.0, ~0.3-0.4 s/image) localizes semantically;
+auto-labels reach ~90-95% of human-label downstream mAP on benchmarks harder
+than single-centered-object data. Human-annotated TrashNet detection versions
+exist on Roboflow Universe (Polygence 2,524 imgs) as free cross-check ground
+truth.
+**Evidence:** forum.opencv.org white-on-white thread; rembg discussion #566;
+Cloudflare bg-removal eval (BiRefNet IoU 0.87); Voxel51 auto-labeling eval;
+DART pipeline arXiv:2407.09174; CS229/CS230 TrashNet reports.
+**Implications:** T3's primary/fallback chain and the free IoU cross-check.
+
+### F16: Detection training tolerates ~20% localization noise (~2 mAP cost)
+**Finding:** At 20% noise ratio, localization noise costs only -2.0 mAP --
+mildest noise type after class noise (-2.4); but noise types compound
+synergistically (-10.8 mAP at 20% combined); ~30% box noise roughly halves
+mAP. Mild random box noise can even help (NBBOX). Systematic bias (fixed
+full-image boxes) is different: the model regresses frame-sized boxes.
+**Evidence:** arXiv:2312.13822 (Universal Noise Annotation); arXiv:2409.09424;
+ResearchGate 354111821.
+**Implications:** The T3 QA budget (<=10% mixed errors, <=20%
+localization-only) keeps expected degradation at 1-2 mAP; class labels coming
+from source folders (not the detector) removes the worst noise type entirely.
+
+### F17: TrashNet composition quantified
+**Finding:** TrashNet: 2,527 images, 512x384, single hand-placed object on
+white posterboard -- glass 501, paper 594, cardboard 403, plastic 482, metal
+410, trash 137. MIT license.
+**Evidence:** github.com/garythung/trashnet.
+**Implications:** Closest analogue to deployment presentation; the "trash"
+class (137) maps to nothing in our six and is dropped; per-class counts feed
+the T4 balancing math.
+
 ## References
 
 <!-- R# entries -->
