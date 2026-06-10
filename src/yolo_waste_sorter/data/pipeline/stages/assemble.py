@@ -117,8 +117,8 @@ def _split_run(ctx: PipelineContext) -> str:
 
 
 def _split_complete(ctx: PipelineContext) -> bool:
-    dataset_yaml = ctx.processed_root / ctx.cfg.experiment.name / "dataset.yaml"
-    return ctx.manifest_path("split").is_file() and dataset_yaml.is_file()
+    data_yaml = ctx.processed_root / ctx.cfg.experiment.name / "dataset.yaml"
+    return ctx.manifest_path("split").is_file() and data_yaml.is_file()
 
 
 def split_stage() -> Stage:
