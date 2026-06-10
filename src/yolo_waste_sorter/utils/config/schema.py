@@ -55,14 +55,14 @@ class ProbConfig:
 
 
 @dataclass(frozen=True)
-class JpegConfig:
+class ImageCompressionConfig:
     quality_range: tuple[int, int]
     p: float
 
 
 @dataclass(frozen=True)
 class MotionBlurConfig:
-    limit: tuple[int, int]
+    blur_limit: tuple[int, int]
     p: float
 
 
@@ -74,22 +74,27 @@ class DefocusConfig:
 
 @dataclass(frozen=True)
 class DownscaleConfig:
-    range: tuple[float, float]
+    scale_range: tuple[float, float]
     p: float
 
 
 @dataclass(frozen=True)
 class Esp32StackConfig:
-    """T5 Albumentations degradation stack simulating the ESP32-CAM OV2640."""
+    """T5 Albumentations degradation stack simulating the ESP32-CAM OV2640.
 
-    jpeg: JpegConfig
+    Field names are the snake_case Albumentations transform names and the
+    inner keys are the transforms' constructor kwargs -- the exact contract
+    of ``yolo_waste_sorter.utils.degrade.build_train_stack``.
+    """
+
+    image_compression: ImageCompressionConfig
     iso_noise: ProbConfig
     gauss_noise: ProbConfig
     motion_blur: MotionBlurConfig
     defocus: DefocusConfig
     planckian_jitter: ProbConfig
     downscale: DownscaleConfig
-    brightness_contrast: ProbConfig
+    random_brightness_contrast: ProbConfig
 
 
 @dataclass(frozen=True)
