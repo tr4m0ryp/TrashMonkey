@@ -86,11 +86,11 @@ augment:
     brightness_contrast:
       p: 0.2
 
-# T6 three-tier eval. val_fraction and leave_out_source stay null until the
-# dataset census picks the held-out TEST-1 source.
+# T6 three-tier eval. Census picked RealWaste as the held-out TEST-1 source
+# (leave-one-source-out: all six classes, real degraded items, never trained).
 eval:
-  val_fraction: null
-  leave_out_source: null
+  val_fraction: 0.15
+  leave_out_source: realwaste
   test2_severities: [1, 2, 3, 4, 5]
 
 # T9 rest-bin consensus rule: permissive per-frame conf_floor, qualified votes

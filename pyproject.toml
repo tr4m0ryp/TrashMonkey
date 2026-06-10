@@ -7,6 +7,7 @@ dependencies = [
     "ultralytics>=8.3,<9",
     "pyyaml>=6,<7",
     "albumentations>=2.0,<3",
+    "imagehash>=4.3,<5",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +43,7 @@ module = [
     "autodistill.*",
     "autodistill_grounding_dino",
     "rembg",
+    "imagehash",
 ]
 ignore_missing_imports = true
 
