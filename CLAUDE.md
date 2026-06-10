@@ -14,7 +14,7 @@ seeds via `src/yolo_waste_sorter/utils/seed.py` (seed 42 everywhere).
 ## Layout
 
 - `data/{raw,interim,processed,external}/` -- gitignored; never mutate `raw/`
-- `notebooks/` -- exploration ONLY, numbered (`01-explore-data.ipynb`)
+- `notebooks/` -- manager + exploration notebooks; see "Notebook discipline"
 - `src/yolo_waste_sorter/{data,features,models,visualization,utils}/` -- real logic
 - `configs/` -- YAML experiment configs
 - `experiments/`, `models/` -- run logs and checkpoints (gitignored)
