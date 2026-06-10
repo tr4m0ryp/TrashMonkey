@@ -19,17 +19,10 @@ line-length = 100
 [tool.mypy]
 strict = true
 
-<<<<<<< HEAD
-# Optional runtime deps probed via try/import in utils/seed.py; not installed
-# in the lint environment.
-[[tool.mypy.overrides]]
-module = ["numpy", "numpy.*", "torch", "torch.*"]
-=======
 [[tool.mypy.overrides]]
 # Untyped third-party imports: PyYAML ships no stubs; numpy/torch are optional
 # imports in utils.seed and absent from lint environments.
-module = ["yaml", "numpy", "torch"]
->>>>>>> agent/agent-ab9e7375ba68abdc9
+module = ["yaml", "numpy", "numpy.*", "torch", "torch.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
