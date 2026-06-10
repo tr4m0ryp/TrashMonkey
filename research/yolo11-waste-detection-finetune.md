@@ -16,7 +16,37 @@ and dedup/licensing.
 
 ## Recommended Technical Design
 
-<!-- pending -- filled at wrap-up -->
+Build one merged, deduplicated, license-attributed YOLO dataset (~5-10k images)
+from clean-background public waste sets remapped to the six classes
+[exact source mix and mapping table: T1/T2, pending census]. Classification-only
+sources get boxes from **Grounding DINO** (class label from the source folder,
+the prompt only localizes), with a BiRefNet-mask fallback and a flagged
+center-box last resort, gated by automated QA plus a 10% stratified human
+review (T3).
+
+Fine-tune **yolo11n** from COCO weights with a pinned recipe -- AdamW lr0=0.001,
+100 epochs, batch 16, imgsz 640, full fine-tune, cache=disk, seed 42 (T7) --
+augmented for the known deployment camera: degrees=180/flipud for the top-down
+view, plus an Albumentations stack simulating measured OV2640 defects (JPEG
+blocking, ISO noise, motion blur, Planckian white-balance drift, downscale)
+(T5). Training runs on Colab GPU through a **manager notebook** (thin
+orchestrator over `src/yolo_waste_sorter/`, per project convention); all logic
+stays in the package.
+
+Evaluate on three tiers -- stratified instance-grouped VAL for selection,
+leave-one-source-out TEST-1, and ESP32-degraded copies as TEST-2, the demo-day
+proxy (T6). Escalate to yolo11s only if val mAP50 < 0.95 or any per-class
+mAP50/recall < 0.90 after one data-fix iteration (T7).
+
+Deploy on **JetPack 6.2.2**: export the TensorRT FP16 engine ON the Jetson at
+imgsz 640, MAXN SUPER power mode (T8). Runtime is a single Python process:
+three grab-latest daemon threads over the ESP32-CAM MJPEG streams (SVGA),
+round-robin inference at ~5 ms/frame, and the rest-bin rule as **multi-frame
+consensus** -- frame votes at tau>=0.40, sort on >=3 agreeing votes holding a
+strict majority with a 0.60 high-water mark, else rest; thresholds tuned by
+sweep on degraded validation including a wilderness (unknown-object) probe set
+built from the census drop list (T9). The engine artifact ships with a
+`thresholds.yaml` for control logic.
 
 ## Decisions
 
