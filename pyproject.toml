@@ -36,6 +36,8 @@ module = [
     "numpy.*",
     "torch",
     "torch.*",
+    "albumentations",
+    "albumentations.*",
     "autodistill",
     "autodistill.*",
     "autodistill_grounding_dino",
