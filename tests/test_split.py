@@ -12,25 +12,14 @@ import pytest
 import yaml
 from PIL import Image
 
+from item_helpers import make_items
+
 from yolo_waste_sorter.data.balance import balance_items
 from yolo_waste_sorter.data.dedup import Item, NearEdge, dedup_items, scan_remapped
 from yolo_waste_sorter.data.split import SplitError, emit_dataset, split_items
 
 CLASSES = ("plastic", "paper", "cardboard", "metal", "glass", "organic")
 PRIORITY = ["trashnet", "gc3", "realwaste"]
-
-
-def make_items(class_name: str, source: str, n: int) -> list[Item]:
-    return [
-        Item(
-            key=f"{class_name}/{source}__{i:04d}.png",
-            class_name=class_name,
-            source=source,
-            image=Path(f"/fake/{class_name}/{source}__{i:04d}.png"),
-            label=None,
-        )
-        for i in range(n)
-    ]
 
 
 def write_corpus(root: Path, class_name: str, source: str, n: int, seed0: int) -> list[Item]:
