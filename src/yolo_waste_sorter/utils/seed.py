@@ -18,7 +18,7 @@ def set_seed(seed: int = 42) -> None:
     except ImportError:
         pass
     try:
-        import torch
+        import torch  # type: ignore[import-not-found]
 
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
@@ -28,4 +28,5 @@ def set_seed(seed: int = 42) -> None:
 
 def load_config(path: str | Path = "configs/config.yaml") -> dict[str, Any]:
     with open(path) as f:
-        return yaml.safe_load(f)
+        config: dict[str, Any] = yaml.safe_load(f)
+    return config
