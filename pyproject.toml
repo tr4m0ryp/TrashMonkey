@@ -2,6 +2,7 @@
 name = "yolo-waste-sorter"
 version = "0.1.0"
 description = "Fine-tune YOLO11n for six-class waste detection (plastic, paper, cardboard, metal, glass, organic) on white background, deployed via TensorRT on Jetson Orin Nano"
+license = { text = "AGPL-3.0-or-later" }
 requires-python = ">=3.11"
 dependencies = [
     "ultralytics>=8.3,<9",
