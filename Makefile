@@ -20,4 +20,4 @@ test:
 	$(PYTEST)
 
 repro:
-	@echo "TODO: data pipeline (download -> remap -> merge -> balance -> train -> export)"
+	PYTHONPATH=src $(PY) -m yolo_waste_sorter.data.pipeline run
