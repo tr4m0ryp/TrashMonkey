@@ -58,3 +58,6 @@ paper.pdf
 
 # paper-scribe working queue (transient)
 .paper/
+
+# scratch clones / temp analysis dirs (Stop-hook auto-commit must never sweep these)
+.tmp-*/
