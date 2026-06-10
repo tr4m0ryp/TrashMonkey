@@ -817,11 +817,13 @@ excluded-with-reason table.
 
 ## Risks & Open Threads
 
-- [ ] **T1/T2/T4/T10 pending dataset census** (agent running) -- label-mapping
-  table, source shortlist, per-class targets, dedup/license table. Blocks
-  /readyforlaunch for the data-pipeline tasks only.
-- [ ] **Organic-class thinness** -- the weakest class in public sets; census
-  will quantify extractable counts; remedy options land in T4.
+- [x] T1/T2/T4/T10 dataset census -- resolved 2026-06-10 (F18-F21); mapping
+  table, five-source shortlist, 1,500 cap, dedup/license table all decided.
+- [x] Organic-class thinness -- resolved: ~2k supply from GC3 biodegradable +
+  alistairking organic folders clears the cap zone (F21).
+- [ ] **GC3 provenance** -- the largest source is a Roboflow aggregate of
+  unknown lineage; mitigated by load-bearing pHash dedup (T10) and the overlap
+  matrix in the paper; verify the dedup numbers look sane at pipeline time.
 - [ ] **White-paper-on-white bbox QA burden** -- fallback chain fires most on
   the paper class; the 10% review oversamples it; if review fails the
   acceptance bar, escalate that subset to manual boxes (bounded: ~600 images).
