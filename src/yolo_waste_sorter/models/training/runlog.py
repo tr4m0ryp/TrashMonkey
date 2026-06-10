@@ -9,7 +9,6 @@ timestamp is injected (``now``) for testability.
 from __future__ import annotations
 
 import dataclasses
-import hashlib
 import json
 import subprocess
 from datetime import datetime, timezone
@@ -17,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from yolo_waste_sorter.utils.config import Config
+from yolo_waste_sorter.utils.hashing import sha256_file
 
 
 def _jsonable(value: object) -> object:
@@ -35,14 +35,6 @@ def resolved_config_dict(cfg: Config) -> dict[str, Any]:
     result = _jsonable(dataclasses.asdict(cfg))
     assert isinstance(result, dict)
     return result
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def git_commit(repo_root: Path) -> str | None:
