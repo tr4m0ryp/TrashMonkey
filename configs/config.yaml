@@ -86,18 +86,10 @@ augment:
     brightness_contrast:
       p: 0.2
 
-<<<<<<< HEAD
-# T6 three-tier eval. leave_out_source = TEST-1 leave-one-source-out holdout:
-# realwaste (census decision, T2/T6) is ingested but never trained on.
-# val_fraction stays null until the split task fills it.
-eval:
-  val_fraction: null
-=======
 # T6 three-tier eval. Census picked RealWaste as the held-out TEST-1 source
 # (leave-one-source-out: all six classes, real degraded items, never trained).
 eval:
   val_fraction: 0.15
->>>>>>> agent/agent-a567186ef69b3c2ef
   leave_out_source: realwaste
   test2_severities: [1, 2, 3, 4, 5]
 
