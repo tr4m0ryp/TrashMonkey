@@ -7,7 +7,7 @@ MYPY    := $(shell [ -x .venv/bin/mypy ] && echo .venv/bin/mypy || echo mypy)
 
 export NO_ALBUMENTATIONS_UPDATE = 1
 
-.PHONY: paper lint test repro
+.PHONY: paper lint test repro smoke
 
 paper:
 	tectonic paper.tex
@@ -21,3 +21,8 @@ test:
 
 repro:
 	PYTHONPATH=src $(PY) -m yolo_waste_sorter.data.pipeline run
+
+# End-to-end smoke harness in a throwaway tmp dir. Uses real ultralytics when
+# installed; `FAKE_MODEL=1 make smoke` injects the offline fake-model mocks.
+smoke:
+	PYTHONPATH=src $(PY) -m yolo_waste_sorter.smoke
