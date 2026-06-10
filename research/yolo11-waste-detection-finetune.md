@@ -20,6 +20,67 @@ and dedup/licensing.
 
 ## Decisions
 
+### T5: Augmentation recipe (closing the public-data -> ESP32-CAM gap)
+**Decision:** Two layers.
+Native Ultralytics args: `degrees=180`, `flipud=0.5`, `fliplr=0.5` (top-down =
+no canonical orientation), `hsv_v=0.5` (up from 0.4), keep `hsv_h=0.015`
+(do NOT raise -- hue is the material cue), `hsv_s=0.7`, `scale=0.5`,
+`translate=0.1`, `mosaic=1.0` with `close_mosaic=10`, `mixup=0`, `cutmix=0`,
+`shear=0`, `perspective=0`, `copy_paste=0` (unusable: needs seg masks).
+Albumentations layer (auto-engages when installed; pass `augmentations=[...]`
+via the Python API -- it replaces only the Albumentations block, native augs
+stay): `ImageCompression(quality_range=(50,85), p=0.5)`, `ISONoise(p=0.3)`,
+`GaussNoise(p=0.2)`, `MotionBlur(blur_limit=(3,7), p=0.3)`,
+`Defocus(radius=(1,3), p=0.1)`, `PlanckianJitter(p=0.3)` (physical white-balance
+drift without destroying hue), `Downscale(scale_range=(0.4,0.75), p=0.3)`,
+`RandomBrightnessContrast(p=0.2)`. Target: ~40-60% of samples get at least one
+degradation; severities matched to measured OV2640 output (SVGA, mid JPEG
+quality, 40 dB SNR).
+**Why:** The deployment camera's defects are KNOWN (OV2640: JPEG blocking,
+AGC noise, AWB green/warm drift, motion + fixed-focus blur, low effective
+resolution -- F7), so we target them directly; corruption-style augmentation
+demonstrably restores 30-60% performance lost under camera-quality shift (F8).
+Mosaic stays high because public-set backgrounds are heterogeneous while deploy
+is always white -- mosaic breaks background correlation; close_mosaic restores
+single-object statistics for the final epochs.
+**Alternatives rejected:** Raising hsv_h for color robustness (destroys
+glass/plastic/organic hue discrimination -- use PlanckianJitter instead); mixup
+(blends two materials = label noise; empirically hurts nano models, YOLOX
+ablation); built-in copy_paste (segmentation-only); generic ImageNet-C severity
+presets (severity-sensitive transfer -- match to measured camera output).
+**Confidence:** high on the structure, medium on exact severity values --
+calibrate once a real ESP32-CAM frame sample exists.
+
+### T6: Validation/test composition with zero deployment images
+**Decision:** Three tiers, all three reported in the paper.
+1. **VAL** -- held-out split of the merged set, stratified by source-dataset x
+   class, grouped by physical object instance (all photos of one item stay on
+   one side). Drives model selection, early stopping, threshold sweeps. An
+   optimistic ceiling, never a deployment claim.
+2. **TEST-1 (dataset shift)** -- leave-one-SOURCE-out: an entire public dataset
+   never trained on, chosen for deployment-like presentation (single object,
+   clean background).
+3. **TEST-2 (demo-day estimate)** -- degraded copies of TEST-1 through the
+   ESP32 pipeline (downscale to 800x600 and back, JPEG re-encode q60-80,
+   ISO/Gaussian noise, Planckian WB shift, mild motion blur) at 3-5 severity
+   levels, reported as a curve.
+   Never tune on TEST-1/TEST-2. The rest-bin confidence threshold is chosen on
+   DEGRADED images, not clean ones -- corruption suppresses confidence and a
+   clean-tuned threshold over-rejects at deploy.
+**Why:** Random splits are "highly overoptimistic" vs unseen sources (F9);
+training-domain validation is the most reliable practical selection criterion
+absent target data (DomainBed); degraded-copy evaluation is established
+practice (ImageNet-C / COCO-C, MMDetection robustness tooling -- F10) and
+composes the two independent gap axes (unseen-source statistics x sensor
+degradation). Instance-grouping prevents near-duplicate leakage from
+TrashNet-style repeated shots of the same item.
+**Alternatives rejected:** Plain random split (inflated numbers); compositing
+objects onto white as the test set (weaker precedent than degraded-copy, and
+compositing is already used on the training side); waiting for own-board
+images (out of scope by C4).
+**Confidence:** high. Calibrate the proxy with a small real ESP32 eval sample
+the day hardware exists (calibration only, not tuning).
+
 ### T7: Fine-tuning recipe for yolo11n + escalation rule
 **Decision:** Full fine-tune (no freezing) from `yolo11n.pt`, 100 epochs, explicit
 `optimizer="AdamW", lr0=0.001, momentum=0.9`, `batch=16`, `imgsz=640`,
