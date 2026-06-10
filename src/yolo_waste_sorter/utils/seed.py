@@ -17,7 +17,7 @@ def set_seed(seed: int = 42) -> None:
     except ImportError:
         pass
     try:
-        import torch  # type: ignore[import-not-found]
+        import torch
 
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
