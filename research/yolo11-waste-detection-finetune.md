@@ -615,6 +615,56 @@ white posterboard -- glass 501, paper 594, cardboard 403, plastic 482, metal
 class (137) maps to nothing in our six and is dropped; per-class counts feed
 the T4 balancing math.
 
+### F18: Census-verified dataset facts (counts via Kaggle file enumeration)
+**Finding:** TrashNet 2,527 (MIT, white posterboard; trash class 137);
+Drinking Waste 4,828 raw + YOLO labels (CC0; AluCan 1,060, Glass 1,232, HDPEM
+1,028, PET 1,508); Garbage Classification 3 10,464 detection images, 7 classes
+incl. biodegradable (CC BY 4.0, Kaggle mirror viswaprakash1990); RealWaste
+4,752, 9 classes incl. Food Organics 411 + Vegetation 436 (CC BY 4.0, UCI);
+alistairking ~30 classes with studio("default")+real_world splits (MIT,
+organic 500 verified). WaDaBa is contract-gated, PET-dominated, PVC/PE-LD
+empty. mostafaabla 15,515 actual files (page claims 15,150), ODbL. sumn2u has
+three conflicting published counts (12,259 actual) and two conflicting
+licenses (MIT page vs CC BY 4.0 paper).
+**Evidence:** Authenticated Kaggle API file census 2026-06-10; canonical pages
+(census agent report, R16-R20).
+**Implications:** The T1/T2/T4 numbers; never trust dataset-page counts -- the
+pipeline re-counts on ingest.
+
+### F19: The clean<->cluttered domain gap is measured and large
+**Finding:** Training on pristine material imagery yields 49.69% accuracy in a
+real waste environment vs 89.19% training in-domain (~40-point swing,
+RealWaste paper). ZeroWaste authors: the shift between solid-background sets
+and real conveyor imagery "makes it impossible" to cross-use models. A
+TrashNet-based bin study found white-background bias makes models latch onto
+background -- acceptable only because OUR deployment is genuinely white.
+**Evidence:** MDPI Information 14(12):633 (RealWaste); arXiv:2106.02740
+(ZeroWaste); arXiv:2210.00448.
+**Implications:** T2 trains clean-only and excludes TACO-style data from
+training; the white-background bet is explicitly domain-matched, and TEST-1
+(RealWaste) measures what happens when presentation degrades.
+
+### F20: The Kaggle waste-dataset ecosystem is heavily TrashNet-inbred
+**Finding:** asdasdasasdas/cchangcs/farzadnekouei 6-class sets are byte-level
+TrashNet repacks (identical per-class counts 403/501/410/594/482/137); ~29% of
+mostafaabla's non-clothes classes came from a TrashNet repack; sumn2u descends
+from mostafaabla; Drinking Waste reuses part of TrashNet's glass; Garbage
+Classification 3 is a Roboflow aggregate of unknown provenance.
+**Evidence:** Census file enumeration + page lineage statements (R16).
+**Implications:** Ingest each image family once (T2 shortlist); pHash dedup is
+load-bearing, especially against GC3 (T10); the paper's overlap matrix
+documents what was actually removed.
+
+### F21: Organic-class supply is sufficient without reserve sources
+**Finding:** With RealWaste held out, organic supply is ~2k (GC3 biodegradable
+share + alistairking food_waste/eggshells/coffee_grounds/tea_bags folders),
+clearing the 1,500 cap zone and the 800 floor. CompostNet (175, white-bg) has
+no license; techsash (13,966) and Fruits-360 are CC BY-SA and off-domain --
+all parked as reserve only.
+**Evidence:** Census section B (R16).
+**Implications:** Resolves the organic-thinness open thread without licensing
+or domain compromises.
+
 ## References
 
 ### R1: Ultralytics v8.3.0 source (trainer, metrics, model cfg, seeds)
