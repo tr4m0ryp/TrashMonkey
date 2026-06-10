@@ -1,0 +1,496 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - link "Go to Roboflow App" [ref=e8] [cursor=pointer]:
+            - /url: https://app.roboflow.com
+            - img [ref=e9]
+          - generic:
+            - generic: Go to Roboflow App
+        - link "Universe Home" [ref=e11] [cursor=pointer]:
+          - /url: https://universe.roboflow.com
+          - generic:
+            - img [ref=e12]
+            - generic:
+              - generic: Universe Home
+        - button "Sign In Sign In or Sign Up" [ref=e15] [cursor=pointer]:
+          - img "Sign In" [ref=e17]
+          - generic:
+            - generic: Sign In or Sign Up
+      - generic [ref=e18]:
+        - link "Go to Roboflow App" [ref=e19] [cursor=pointer]:
+          - /url: https://app.roboflow.com
+          - generic [ref=e20]:
+            - img [ref=e21]
+            - generic:
+              - generic: Roboflow App
+        - generic [ref=e22]:
+          - button "Documentation" [ref=e23] [cursor=pointer]:
+            - generic:
+              - img "Documentation" [ref=e24]
+              - img "Documentation" [ref=e25]
+            - text: 
+          - generic:
+            - generic: Documentation
+        - text:  
+    - text: 
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - link "Universe Home" [ref=e31] [cursor=pointer]:
+            - /url: /
+            - text: Universe
+          - search [ref=e36]:
+            - button "Search" [ref=e37] [cursor=pointer]:
+              - img [ref=e38]
+            - generic [ref=e40]:
+              - combobox "Search 1 million+ datasets and 250k+ models..." [ref=e41]
+              - text: 
+          - generic [ref=e43]:
+            - link "Explore" [ref=e44] [cursor=pointer]:
+              - /url: /browse
+              - generic [ref=e45]: Explore
+            - button "Datasets" [ref=e47] [cursor=pointer]:
+              - generic [ref=e48]: Datasets
+              - img [ref=e49]
+            - button "Models" [ref=e52] [cursor=pointer]:
+              - generic [ref=e53]: Models
+              - img [ref=e54]
+            - link "Trending" [ref=e56] [cursor=pointer]:
+              - /url: /trending
+              - generic [ref=e57]: Trending
+        - button "Sign in" [ref=e60] [cursor=pointer]
+      - generic [ref=e63]:
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - 'heading "TrashNet: A set of annotated images of trash that can be used for object detection Computer Vision Model" [level=1] [ref=e68]'
+              - generic [ref=e69]:
+                - generic [ref=e70]:
+                  - generic [ref=e71]: by
+                  - link "Polygence Project" [ref=e72] [cursor=pointer]:
+                    - /url: /polygence-project
+                - generic [ref=e73]:
+                  - generic [ref=e74]: "Task:"
+                  - link "Object Detection" [ref=e75] [cursor=pointer]:
+                    - /url: /search?q=object%20detection%20model
+                    - generic [ref=e76]:
+                      - img [ref=e77]
+                      - generic [ref=e79]: Object Detection
+                - generic [ref=e80]:
+                  - generic [ref=e81]: "License:"
+                  - generic [ref=e82]: CC BY 4.0
+                - button "Star this project" [ref=e83] [cursor=pointer]:
+                  - img [ref=e84]
+                  - generic [ref=e86]: "5"
+                  - generic [ref=e87]: stars
+                - generic [ref=e88]: 10.3k views
+                - generic [ref=e89]: 353 downloads
+            - generic [ref=e91]:
+              - button "Deploy Model" [ref=e92] [cursor=pointer]:
+                - img [ref=e93]
+                - text: Deploy Model
+              - button "Fork Dataset" [ref=e95] [cursor=pointer]:
+                - img [ref=e96]
+                - text: Fork Dataset
+          - 'img "TrashNet: A set of annotated images of trash that can be used for object detection sample image" [ref=e98]':
+            - button "Preview sample images from this dataset" [ref=e100] [cursor=pointer]:
+              - img [ref=e101]
+              - text: Preview images
+        - navigation "Project sections" [ref=e104]:
+          - link "Overview" [ref=e105] [cursor=pointer]:
+            - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection
+          - link "Images 2,524" [ref=e106] [cursor=pointer]:
+            - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/browse
+            - text: Images
+            - generic [ref=e107]: 2,524
+          - link "Dataset 18" [ref=e108] [cursor=pointer]:
+            - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/dataset/1
+            - text: Dataset
+            - generic [ref=e109]: "18"
+          - link "Model 2" [ref=e110] [cursor=pointer]:
+            - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/model/5
+            - text: Model
+            - generic [ref=e111]: "2"
+          - link "API Docs" [ref=e112] [cursor=pointer]:
+            - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/model/5/documentation
+        - generic [ref=e118]:
+          - complementary [ref=e119]:
+            - generic [ref=e121]:
+              - generic [ref=e122]:
+                - table [ref=e123]:
+                  - rowgroup [ref=e124]:
+                    - row "Images 2.5k" [ref=e125]:
+                      - cell "Images" [ref=e126]
+                      - cell "2.5k" [ref=e127]
+                    - row "Dataset versions 18" [ref=e128]:
+                      - cell "Dataset versions" [ref=e129]
+                      - cell "18" [ref=e130]
+                    - row "Models 2" [ref=e131]:
+                      - cell "Models" [ref=e132]
+                      - cell "2" [ref=e133]
+                - generic [ref=e134]:
+                  - generic [ref=e136]:
+                    - generic [ref=e137]: mAP@50
+                    - generic [ref=e138]: 66.1%
+                  - generic [ref=e142]:
+                    - generic [ref=e143]: Precision
+                    - generic [ref=e144]: 80.2%
+                  - generic [ref=e148]:
+                    - generic [ref=e149]: Recall
+                    - generic [ref=e150]: 60.1%
+              - generic [ref=e154]:
+                - generic [ref=e155]: Classes (6)
+                - generic [ref=e156]:
+                  - link " paper" [ref=e157] [cursor=pointer]:
+                    - /url: /search?q=class:paper
+                  - link " plastic" [ref=e158] [cursor=pointer]:
+                    - /url: /search?q=class:plastic
+                  - link " glass" [ref=e159] [cursor=pointer]:
+                    - /url: /search?q=class:glass
+                  - link " metal" [ref=e160] [cursor=pointer]:
+                    - /url: /search?q=class:metal
+                  - link " cardboard" [ref=e161] [cursor=pointer]:
+                    - /url: /search?q=class:cardboard
+                  - link " trash" [ref=e162] [cursor=pointer]:
+                    - /url: /search?q=class:trash
+              - generic [ref=e164]:
+                - generic [ref=e165]: Tags
+                - generic [ref=e166]:
+                  - link "Object Detection" [ref=e167] [cursor=pointer]:
+                    - /url: /search?q=object%20detection
+                  - link "Model" [ref=e168] [cursor=pointer]:
+                    - /url: /search?q=trained%20model
+              - generic [ref=e170]:
+                - generic [ref=e171]: Maintainer
+                - paragraph [ref=e172]:
+                  - link "Polygence Project" [ref=e173] [cursor=pointer]:
+                    - /url: /polygence-project
+              - generic [ref=e175]:
+                - generic [ref=e176]: Updated 4 months ago
+                - button "Report project" [ref=e178] [cursor=pointer]:
+                  - generic [ref=e179]: 
+                  - generic [ref=e180]: Report
+          - generic [ref=e181]:
+            - generic [ref=e183]:
+              - link " See all 2.5k images" [ref=e184] [cursor=pointer]:
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/browse
+                - generic [ref=e185]: 
+                - text: See all 2.5k images
+              - 'link "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing plastic" [ref=e186] [cursor=pointer]':
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/images/03IS0dakkIQymbkX2dBI
+                - 'img "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing plastic" [ref=e188]'
+              - 'link "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing paper" [ref=e189] [cursor=pointer]':
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/images/041GdA6fPWI4mw5l2qmM
+                - 'img "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing paper" [ref=e191]'
+              - 'link "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing paper" [ref=e192] [cursor=pointer]':
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/images/04HdhSShQ50roUwDZKZs
+                - 'img "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing paper" [ref=e194]'
+              - 'link "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing plastic" [ref=e195] [cursor=pointer]':
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/images/07rVYBBKKCUAWoWuluyY
+                - 'img "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing plastic" [ref=e197]'
+              - 'link "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing paper" [ref=e198] [cursor=pointer]':
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/images/07wQmqVzXI0uXZjpuydd
+                - 'img "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing paper" [ref=e200]'
+              - 'link "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing plastic" [ref=e201] [cursor=pointer]':
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/images/0APdAv1O27DxJwVGWGPz
+                - 'img "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing plastic" [ref=e203]'
+              - 'link "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing metal" [ref=e204] [cursor=pointer]':
+                - /url: /polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection/images/0Btuzxhs0xyTp1iKvikM
+                - 'img "TrashNet: A set of annotated images of trash that can be used for object detection idk sample showing metal" [ref=e206]'
+            - generic [ref=e207]:
+              - 'heading "About TrashNet: A set of annotated images of trash that can be used for object detection Model" [level=2] [ref=e208]'
+              - generic [ref=e209]:
+                - paragraph [ref=e210]: Deploy a high-performance waste detection model optimized for automated recycling and smart waste management. This project offers a pre-trained computer vision model and an annotated dataset, identifying glass, paper, cardboard, plastic, and metal for environmental cleanup initiatives.
+                - heading "Ways to Use TrashNet Model" [level=2] [ref=e211]
+                - list [ref=e212]:
+                  - listitem [ref=e213]:
+                    - strong [ref=e214]: "AI-Powered Sorting Bins:"
+                    - text: Integrate the model into "smart" disposal stations in offices or malls to guide users in real-time, displaying which bin to use based on the material identified in their hand.
+                  - listitem [ref=e215]:
+                    - strong [ref=e216]: "Reverse Vending Machines:"
+                    - text: Power automated kiosks that accept and sort recyclable containers like glass bottles and metal cans, providing rewards or deposits back to consumers instantly.
+                  - listitem [ref=e217]:
+                    - strong [ref=e218]: "Municipality Contamination Audits:"
+                    - text: Deploy the model on waste collection trucks equipped with cameras to identify high levels of "trash" mixed into "paper" or "plastic" recycling loads, helping cities target education efforts.
+                  - listitem [ref=e219]:
+                    - strong [ref=e220]: "Autonomous Litter Robots:"
+                    - text: Implement the model in small, outdoor cleaning robots designed to roam parks or beaches, allowing them to distinguish between natural debris and actionable recyclables like plastic bottles or metal cans.
+                  - listitem [ref=e221]:
+                    - strong [ref=e222]: "Industrial Waste Stream Monitoring:"
+                    - text: Use the model at manufacturing facilities to track the volume of different packaging materials—such as cardboard and metal—entering the waste stream to help optimize sustainable procurement and disposal strategies.
+            - generic [ref=e226]:
+              - generic [ref=e227]:
+                - generic [ref=e228]:
+                  - heading "Use Free Paper, Plastic and Glass Detection API" [level=2] [ref=e229]
+                  - paragraph [ref=e230]: Powered by general detection model
+                - button " Deploy" [ref=e231] [cursor=pointer]:
+                  - generic [ref=e232]: 
+                  - generic [ref=e233]: Deploy
+              - generic [ref=e234]:
+                - generic [ref=e236]:
+                  - generic [ref=e238]:
+                    - generic [ref=e239]:
+                      - generic [ref=e240]: 
+                      - generic [ref=e241]: Code
+                    - button "Python " [ref=e244] [cursor=pointer]:
+                      - generic [ref=e245]: Python
+                      - generic [ref=e246]: 
+                  - code [ref=e250]: pip install inference-sdk
+                  - generic [ref=e251]:
+                    - code [ref=e255]: "# 1. Import the library from inference_sdk import InferenceHTTPClient # 2. Connect to your workspace client = InferenceHTTPClient( api_url=\"https://serverless.roboflow.com\", api_key=\"API****\" ) # 3. Run your workflow on an image result = client.run_workflow( workspace_name=\"<YOUR_WORKSPACE>\", workflow_id=\"<YOUR_WORKFLOW_ID>\", images={ \"image\": \"YOUR_IMAGE.jpg\" # Path to your image file }, parameters={ \"classes\": \"paper, plastic, glass\" }, use_cache=True # cache workflow definition for 15 minutes ) # 4. Get your results print(result)"
+                    - button "" [ref=e256] [cursor=pointer]:
+                      - generic [ref=e257]: 
+                - generic [ref=e260] [cursor=pointer]:
+                  - img [ref=e262]
+                  - generic [ref=e264]:
+                    - heading "Run on custom image" [level=3] [ref=e265]
+                    - paragraph [ref=e267]: Drop an image here or click to upload
+              - generic [ref=e268]:
+                - generic [ref=e270]:
+                  - generic [ref=e271]: "Select classes to detect:"
+                  - button "paper" [ref=e272] [cursor=pointer]
+                  - button "plastic" [ref=e273] [cursor=pointer]
+                  - button "glass" [ref=e274] [cursor=pointer]
+                  - button "metal" [ref=e275] [cursor=pointer]
+                  - button "cardboard" [ref=e276] [cursor=pointer]
+                  - button "+ custom" [ref=e277] [cursor=pointer]
+                - generic [ref=e278]:
+                  - generic [ref=e279]: Or try a test image
+                  - button "Example 1" [ref=e280] [cursor=pointer]:
+                    - img "Example 1" [ref=e281]
+                  - button "Example 2" [ref=e282] [cursor=pointer]:
+                    - img "Example 2" [ref=e283]
+                  - button "Example 3" [ref=e284] [cursor=pointer]:
+                    - img "Example 3" [ref=e285]
+            - generic [ref=e286]:
+              - generic [ref=e287]:
+                - heading "Cite This Project" [level=2] [ref=e288]
+                - generic [ref=e289]:
+                  - generic [ref=e290]: License
+                  - link "CC BY 4.0" [ref=e291] [cursor=pointer]:
+                    - /url: https://creativecommons.org/licenses/by/4.0/
+              - generic [ref=e292]:
+                - paragraph [ref=e293]: "If you use this dataset in a research paper, please cite it using the following BibTeX:"
+                - code [ref=e295]: "@misc{ trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection_dataset, title = { TrashNet: A set of annotated images of trash that can be used for object detection Dataset }, type = { Open Source Dataset }, author = { Polygence Project }, howpublished = { \\url{ https://universe.roboflow.com/polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection } }, url = { https://universe.roboflow.com/polygence-project/trashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection }, journal = { Roboflow Universe }, publisher = { Roboflow }, year = { 2026 }, month = { jan }, note = { visited on 2026-06-10 }, }"
+        - generic [ref=e296]:
+          - generic [ref=e297]:
+            - heading "Similar Projects" [level=3] [ref=e298]
+            - link "See More" [ref=e299] [cursor=pointer]:
+              - /url: /search?q=like:polygence-project%2Ftrashnet-a-set-of-annotated-images-of-trash-that-can-be-used-for-object-detection
+          - generic [ref=e300]:
+            - generic [ref=e302] [cursor=pointer]:
+              - link "xnet project thumbnail" [ref=e303]:
+                - /url: /arya-raval/xnet
+                - img "xnet project thumbnail" [ref=e305]
+                - generic "Model and dataset" [ref=e306]:
+                  - img [ref=e307]
+              - generic [ref=e309]:
+                - generic [ref=e311]:
+                  - link "xnet Computer Vision Model" [ref=e312]:
+                    - /url: /arya-raval/xnet
+                    - heading "xnet" [level=3] [ref=e313]
+                  - paragraph [ref=e314]:
+                    - text: by
+                    - link "Go to New Workspace projects" [ref=e315]:
+                      - /url: /arya-raval
+                      - text: New Workspace
+                - list "Dataset statistics" [ref=e316]:
+                  - listitem "2524 images" [ref=e317]:
+                    - img [ref=e318]
+                    - text: 2.52k
+                  - generic [ref=e320]: ·
+                  - listitem "3 models" [ref=e321]:
+                    - img [ref=e322]
+                    - text: 3 models
+            - generic [ref=e325] [cursor=pointer]:
+              - link "Beach Debris project thumbnail" [ref=e326]:
+                - /url: /new-workspace-9f6bd/beach-debris-2aflf
+                - img "Beach Debris project thumbnail" [ref=e328]
+                - generic "Dataset" [ref=e329]:
+                  - img [ref=e330]
+              - generic [ref=e332]:
+                - generic [ref=e334]:
+                  - link "Beach Debris Computer Vision Dataset" [ref=e335]:
+                    - /url: /new-workspace-9f6bd/beach-debris-2aflf
+                    - heading "Beach Debris" [level=3] [ref=e336]
+                  - paragraph [ref=e337]:
+                    - text: by
+                    - link "Go to New Workspace projects" [ref=e338]:
+                      - /url: /new-workspace-9f6bd
+                      - text: New Workspace
+                - list "Dataset statistics" [ref=e339]:
+                  - listitem "2532 images" [ref=e340]:
+                    - img [ref=e341]
+                    - text: 2.53k
+            - generic [ref=e344] [cursor=pointer]:
+              - link "EcoIdentify V2.0 Reycling Class project thumbnail" [ref=e345]:
+                - /url: /ecoidentify-rpqm6/ecoidentify-v2.0-reycling-class
+                - img "EcoIdentify V2.0 Reycling Class project thumbnail" [ref=e347]
+                - generic "Model and dataset" [ref=e348]:
+                  - img [ref=e349]
+              - generic [ref=e351]:
+                - generic [ref=e353]:
+                  - link "EcoIdentify V2.0 Reycling Class Computer Vision Model" [ref=e354]:
+                    - /url: /ecoidentify-rpqm6/ecoidentify-v2.0-reycling-class
+                    - heading "EcoIdentify V2.0 Reycling Class" [level=3] [ref=e355]
+                  - paragraph [ref=e356]:
+                    - text: by
+                    - link "Go to EcoIdentify projects" [ref=e357]:
+                      - /url: /ecoidentify-rpqm6
+                      - text: EcoIdentify
+                - list "Dataset statistics" [ref=e358]:
+                  - listitem "2640 images" [ref=e359]:
+                    - img [ref=e360]
+                    - text: 2.64k
+                  - generic [ref=e362]: ·
+                  - listitem "2 models" [ref=e363]:
+                    - img [ref=e364]
+                    - text: 2 models
+            - generic [ref=e367] [cursor=pointer]:
+              - link "My First Project project thumbnail" [ref=e368]:
+                - /url: /dishas-workspace-d1vmg/my-first-project-s5euo
+                - img "My First Project project thumbnail" [ref=e370]
+                - generic "Dataset" [ref=e371]:
+                  - img [ref=e372]
+              - generic [ref=e374]:
+                - generic [ref=e376]:
+                  - link "My First Project Computer Vision Dataset" [ref=e377]:
+                    - /url: /dishas-workspace-d1vmg/my-first-project-s5euo
+                    - heading "My First Project" [level=3] [ref=e378]
+                  - paragraph [ref=e379]:
+                    - text: by
+                    - link "Go to Dishas Workspace projects" [ref=e380]:
+                      - /url: /dishas-workspace-d1vmg
+                      - text: Dishas Workspace
+                - list "Dataset statistics" [ref=e381]:
+                  - listitem "80 images" [ref=e382]:
+                    - img [ref=e383]
+                    - text: "80"
+            - generic [ref=e386] [cursor=pointer]:
+              - link "lê xuân hiếu project thumbnail" [ref=e387]:
+                - /url: /hius-workspac/le-xuan-hieu
+                - img "lê xuân hiếu project thumbnail" [ref=e389]
+                - generic "Dataset" [ref=e390]:
+                  - img [ref=e391]
+              - generic [ref=e393]:
+                - generic [ref=e395]:
+                  - link "lê xuân hiếu Computer Vision Dataset" [ref=e396]:
+                    - /url: /hius-workspac/le-xuan-hieu
+                    - heading "lê xuân hiếu" [level=3] [ref=e397]
+                  - paragraph [ref=e398]:
+                    - text: by
+                    - link "Go to Hius Workspac projects" [ref=e399]:
+                      - /url: /hius-workspac
+                      - text: Hius Workspac
+                - list "Dataset statistics" [ref=e400]:
+                  - listitem "1899 images" [ref=e401]:
+                    - img [ref=e402]
+                    - text: 1.9k
+          - text: 
+        - generic [ref=e406]:
+          - generic [ref=e407]:
+            - img [ref=e409]
+            - generic [ref=e411]: © 2026 Roboflow, Inc. All rights reserved.
+          - generic [ref=e413]:
+            - generic [ref=e414]:
+              - generic [ref=e415]:
+                - strong [ref=e416]: Explore Datasets and Models
+                - list [ref=e417]:
+                  - listitem [ref=e418]:
+                    - link "Object Detection" [ref=e419] [cursor=pointer]:
+                      - /url: /object-detection
+                  - listitem [ref=e420]:
+                    - link "Image Classification" [ref=e421] [cursor=pointer]:
+                      - /url: /classification
+                  - listitem [ref=e422]:
+                    - link "Multimodal" [ref=e423] [cursor=pointer]:
+                      - /url: /multimodal
+                  - listitem [ref=e424]:
+                    - link "Instance Segmentation" [ref=e425] [cursor=pointer]:
+                      - /url: /instance-segmentation
+                  - listitem [ref=e426]:
+                    - link "Research" [ref=e427] [cursor=pointer]:
+                      - /url: /research-datasets
+                  - listitem [ref=e428]:
+                    - link "Trending" [ref=e429] [cursor=pointer]:
+                      - /url: /trending
+                  - listitem [ref=e430]:
+                    - link "Cited in Research" [ref=e431] [cursor=pointer]:
+                      - /url: /cited-in-research
+                  - listitem [ref=e432]:
+                    - link "Computer Vision Projects new" [ref=e433] [cursor=pointer]:
+                      - /url: /computer-vision-projects
+                      - text: Computer Vision Projects
+                      - generic [ref=e434]: new
+              - generic [ref=e435]:
+                - strong [ref=e436]: Explore Use Cases
+                - list [ref=e437]:
+                  - listitem [ref=e438]:
+                    - link "Manufacturing" [ref=e439] [cursor=pointer]:
+                      - /url: /browse/manufacturing
+                  - listitem [ref=e440]:
+                    - link "Agriculture" [ref=e441] [cursor=pointer]:
+                      - /url: /browse/agriculture
+                  - listitem [ref=e442]:
+                    - link "Construction" [ref=e443] [cursor=pointer]:
+                      - /url: /browse/construction
+                  - listitem [ref=e444]:
+                    - link "Logistics" [ref=e445] [cursor=pointer]:
+                      - /url: /browse/logistics
+                  - listitem [ref=e446]:
+                    - link "Sports" [ref=e447] [cursor=pointer]:
+                      - /url: /browse/sports
+                  - listitem [ref=e448]:
+                    - link "Self Driving" [ref=e449] [cursor=pointer]:
+                      - /url: /browse/self-driving
+                  - listitem [ref=e450]:
+                    - link "Gaming" [ref=e451] [cursor=pointer]:
+                      - /url: /browse/gaming
+                  - listitem [ref=e452]:
+                    - link "Documents" [ref=e453] [cursor=pointer]:
+                      - /url: /browse/documents
+              - generic [ref=e454]:
+                - strong [ref=e455]: Resources
+                - list [ref=e456]:
+                  - listitem [ref=e457]:
+                    - link "Product Overview" [ref=e458] [cursor=pointer]:
+                      - /url: https://roboflow.com
+                  - listitem [ref=e459]:
+                    - link "Pricing" [ref=e460] [cursor=pointer]:
+                      - /url: https://roboflow.com/pricing
+                  - listitem [ref=e461]:
+                    - link "Documentation" [ref=e462] [cursor=pointer]:
+                      - /url: https://docs.roboflow.com
+                  - listitem [ref=e463]:
+                    - link "Blog" [ref=e464] [cursor=pointer]:
+                      - /url: https://blog.roboflow.com
+                  - listitem [ref=e465]:
+                    - link "YouTube" [ref=e466] [cursor=pointer]:
+                      - /url: https://bit.ly/rf-yt-sub
+                  - listitem [ref=e467]:
+                    - link "Support" [ref=e468] [cursor=pointer]:
+                      - /url: https://app.roboflow.com/settings/support
+                  - listitem [ref=e469]:
+                    - link "Forum" [ref=e470] [cursor=pointer]:
+                      - /url: https://discuss.roboflow.com
+              - generic [ref=e471]:
+                - strong [ref=e472]: Company
+                - list [ref=e473]:
+                  - listitem [ref=e474]:
+                    - link "Careers" [ref=e475] [cursor=pointer]:
+                      - /url: https://roboflow.com/careers
+                  - listitem [ref=e476]:
+                    - link "Press" [ref=e477] [cursor=pointer]:
+                      - /url: https://roboflow.com/press
+                  - listitem [ref=e478]:
+                    - link "Terms of Use" [ref=e479] [cursor=pointer]:
+                      - /url: https://roboflow.com/terms
+                  - listitem [ref=e480]:
+                    - link "Privacy" [ref=e481] [cursor=pointer]:
+                      - /url: https://roboflow.com/privacy
+            - img [ref=e482]
+  - generic:
+    - region "Notifications alt+T"

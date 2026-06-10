@@ -237,12 +237,16 @@ yolo-unet; IIETA RIA 38(4).
 **Implications:** Calibrates the T7 escalation bars (0.95/0.90) and confirms
 nano-first is sound; sub-0.90 val mAP50 signals a data problem, not capacity.
 
-### F6: yolo11n TensorRT FP16 on Orin Nano Super = 4.57 ms/frame at 640
-**Finding:** Official Ultralytics Jetson benchmarks: yolo11n engine FP32 7.53 ms,
-FP16 4.57 ms, INT8 3.80 ms at imgsz 640 on Orin Nano Super.
-**Evidence:** docs.ultralytics.com/guides/nvidia-jetson/.
+### F6: yolo11n TensorRT FP16 on Orin Nano Super = 4.91 ms/frame at 640
+**Finding:** Official Ultralytics Jetson benchmarks (Orin Nano Super, JetPack
+6.1, imgsz 640): yolo11n engine FP32 7.60 ms, FP16 4.91 ms, INT8 3.91 ms;
+yolo11s FP16 7.30 ms. (The 4.57 ms figure floating in current docs is YOLO26n,
+not yolo11n.) Published INT8 mAP collapse in the YOLO11 table is a COCO8
+calibration artifact, not a real INT8 property.
+**Evidence:** docs.ultralytics.com/guides/nvidia-jetson/ (v8.3.100 docs
+snapshot for the YOLO11 table).
 **Implications:** No speed pressure at 640 -- keep train=infer=640; INT8 is the
-later lever, never imgsz reduction; yolo11s (~8 ms) also fits the budget if
+later lever, never imgsz reduction; yolo11s (7.3 ms) also fits the budget if
 escalation triggers.
 
 ## References
