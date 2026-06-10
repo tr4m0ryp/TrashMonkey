@@ -518,7 +518,90 @@ the T4 balancing math.
 
 ## References
 
-<!-- R# entries -->
+### R1: Ultralytics v8.3.0 source (trainer, metrics, model cfg, seeds)
+**Source:** https://github.com/ultralytics/ultralytics/tree/v8.3.0
+**Takeaway:** Ground truth for T7 under our `<9` pin: auto-optimizer flip logic,
+fitness weights, yolo11 backbone indices, seed handling. Current docs describe
+YOLO26-era code -- always verify against the tag.
+
+### R2: Ultralytics NVIDIA Jetson guide
+**Source:** https://docs.ultralytics.com/guides/nvidia-jetson/
+**Takeaway:** Official Orin Nano Super benchmarks (yolo11n FP16 4.91 ms),
+docker images, export path, DLA absence on Orin Nano, best practices.
+
+### R3: Ultralytics fine-tuning + tips guides
+**Source:** https://docs.ultralytics.com/guides/finetuning-guide ;
+https://docs.ultralytics.com/yolov5/tutorials/tips_for_best_training_results/
+**Takeaway:** Freeze-depth guidance, lr0=0.001 AdamW for fine-tunes, dataset
+size bars (>=1500 imgs/class recommended), pretrained-weights guidance.
+
+### R4: JetPack 6.2.x / Super mode (NVIDIA)
+**Source:** https://developer.nvidia.com/embedded/jetpack-sdk-62 ;
+https://developer.nvidia.com/blog/nvidia-jetpack-6-2-brings-super-mode-to-nvidia-jetson-orin-nano-and-jetson-orin-nx-modules/
+**Takeaway:** Version pins (CUDA 12.6/TRT 10.3/cuDNN 9.3), `nvpmodel -m 2`
+MAXN SUPER, throttling caveat.
+
+### R5: TensorRT engine compatibility (NVIDIA)
+**Source:** https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/engine-compatibility.html
+**Takeaway:** Engines are tied to TRT version and device compute capability --
+export must happen on the Jetson.
+
+### R6: ESP32-CAM measured streaming benchmark
+**Source:** https://arxiv.org/html/2505.24081v1
+**Takeaway:** SVGA 8.25 fps / ~27 KB JPEG measured on stock firmware; UXGA
+1.29 fps. The camera, not the Orin, is the system bottleneck.
+
+### R7: Grounding DINO + autodistill
+**Source:** https://arxiv.org/abs/2303.05499 ; https://docs.autodistill.com/
+**Takeaway:** Open-vocabulary boxes from text prompts, Apache-2.0; the T3
+primary labeler. Auto-labels reach ~90-95% of human-label downstream mAP
+(https://voxel51.com/blog/zero-shot-auto-labeling-rivals-human-performance).
+
+### R8: Universal Noise Annotation (label-noise tolerance)
+**Source:** https://arxiv.org/html/2312.13822v1
+**Takeaway:** 20% localization noise costs only ~2 mAP; mixed noise compounds;
+grounds the T3 QA acceptance bars.
+
+### R9: VOS / open-set detection benchmark
+**Source:** https://ar5iv.labs.arxiv.org/html/2202.01197 ;
+https://ieeexplore.ieee.org/document/9093355/
+**Takeaway:** Score thresholding alone leaks 71-81% of OOD objects at 95% TPR;
+unknowns get confident wrong detections -- why T9 uses consensus.
+
+### R10: Conveyor multi-frame voting precedents
+**Source:** https://arxiv.org/html/2602.19278v1 ; https://arxiv.org/pdf/2503.04139
+**Takeaway:** Track-level majority voting stabilizes fluctuating per-frame
+predictions on conveyors; quantified gains, diminishing returns past K~50.
+
+### R11: ImageNet-C / robustness benchmarking lineage
+**Source:** https://arxiv.org/abs/1903.12261 ; https://arxiv.org/abs/1907.07484
+**Takeaway:** Degraded-copy evaluation is established practice; detectors lose
+30-60% under corruption; corruption-targeted augmentation restores much of it.
+Grounds TEST-2 and the T5 stack.
+
+### R12: DomainBed / leave-source-out evidence
+**Source:** https://arxiv.org/abs/2007.01434 ; https://arxiv.org/html/2403.15012v1
+**Takeaway:** Random splits are overoptimistic; training-domain validation is
+the standard selection criterion without target data. Grounds the T6 tiers.
+
+### R13: OV2640 datasheet + ESP32-CAM settings guide
+**Source:** https://www.uctronics.com/download/cam_module/OV2640DS.pdf ;
+https://randomnerdtutorials.com/esp32-cam-ov2640-camera-settings/
+**Takeaway:** Sensor SNR/AWB/JPEG characteristics that the T5 degradation
+stack and TEST-2 simulate.
+
+### R14: TrashNet
+**Source:** https://github.com/garythung/trashnet
+**Takeaway:** 2,527 single-object white-posterboard images, 6 classes, MIT --
+the closest public analogue to our deployment presentation.
+
+### R15: YOLOv8/11 head source (no objectness branch)
+**Source:** https://github.com/ultralytics/ultralytics/blob/main/ultralytics/nn/modules/head.py
+**Takeaway:** Confidence = per-class sigmoid only; what the T9 threshold
+actually thresholds.
+
+<!-- Census references (dataset pages, licenses, overlap evidence) land here
+     as R16+ when the census agent reports. -->
 
 ## Discarded Approaches
 
