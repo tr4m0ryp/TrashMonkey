@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "ultralytics>=8.3,<9",
     "pyyaml>=6,<7",
+    "albumentations>=2.0,<3",
 ]
 
 [project.optional-dependencies]
