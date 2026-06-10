@@ -1,0 +1,26 @@
+seed: 42
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  external: data/external
+  models: models
+  reports: reports
+
+experiment:
+  name: baseline
+
+model:
+  base: yolo11n.pt        # fallback if accuracy disappoints: yolo11s.pt
+  imgsz: 640
+
+# Target label map -- every source dataset remaps onto these six.
+# "rest" is NOT a class: it is a confidence-threshold rule in control logic.
+classes:
+  - plastic
+  - paper
+  - cardboard
+  - metal
+  - glass
+  - organic

@@ -1,0 +1,60 @@
+# OS / editor
+.DS_Store
+*.swp
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials*.json
+
+# Claude Code scaffolding + harness state
+notes/
+tasks/
+.claude/
+
+# Research data & artifacts (keep structure, ignore contents)
+data/raw/*
+data/interim/*
+data/processed/*
+data/external/*
+!data/**/.gitkeep
+models/*
+!models/.gitkeep
+experiments/*
+!experiments/.gitkeep
+reports/figures/*
+!reports/figures/.gitkeep
+wandb/
+mlruns/
+runs/
+
+# YOLO weights
+*.pt
+*.onnx
+*.engine
+
+# LaTeX build
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+paper.pdf
+
+# paper-scribe working queue (transient)
+.paper/

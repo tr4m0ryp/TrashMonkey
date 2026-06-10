@@ -1,0 +1,22 @@
+[project]
+name = "yolo-waste-sorter"
+version = "0.1.0"
+description = "Fine-tune YOLO11n for six-class waste detection (plastic, paper, cardboard, metal, glass, organic) on white background, deployed via TensorRT on Jetson Orin Nano"
+requires-python = ">=3.11"
+dependencies = [
+    "ultralytics>=8.3,<9",
+    "pyyaml>=6,<7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "mypy", "ruff"]
+research = ["numpy", "pandas", "matplotlib", "jupyter"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
