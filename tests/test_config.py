@@ -65,13 +65,13 @@ def test_augment_native_args(config: Config) -> None:
 
 def test_augment_esp32_stack(config: Config) -> None:
     s = config.augment.esp32_stack
-    assert s.jpeg.quality_range == (50, 85) and s.jpeg.p == 0.5
+    assert s.image_compression.quality_range == (50, 85) and s.image_compression.p == 0.5
     assert s.iso_noise.p == 0.3 and s.gauss_noise.p == 0.2
-    assert s.motion_blur.limit == (3, 7) and s.motion_blur.p == 0.3
+    assert s.motion_blur.blur_limit == (3, 7) and s.motion_blur.p == 0.3
     assert s.defocus.radius == (1, 3) and s.defocus.p == 0.1
     assert s.planckian_jitter.p == 0.3
-    assert s.downscale.range == (0.4, 0.75) and s.downscale.p == 0.3
-    assert s.brightness_contrast.p == 0.2
+    assert s.downscale.scale_range == (0.4, 0.75) and s.downscale.p == 0.3
+    assert s.random_brightness_contrast.p == 0.2
 
 
 def test_eval_section(config: Config) -> None:
@@ -134,7 +134,7 @@ def test_wrong_tuple_length_raises(tmp_path: Path) -> None:
     data = _raw()
     augment = data["augment"]
     assert isinstance(augment, dict)
-    augment["esp32_stack"]["jpeg"]["quality_range"] = [50, 85, 99]
+    augment["esp32_stack"]["image_compression"]["quality_range"] = [50, 85, 99]
     with pytest.raises(ConfigError, match=r"quality_range: expected exactly 2 items"):
         load_config(_write(tmp_path, data))
 
