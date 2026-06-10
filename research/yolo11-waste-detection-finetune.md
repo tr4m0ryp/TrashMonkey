@@ -848,7 +848,7 @@ Phases ordered by dependency; P2-P4 parallelize after P1. Built for
 /readyforlaunch task decomposition. All logic in `src/yolo_waste_sorter/`;
 notebooks orchestrate only (project convention).
 
-**P1 -- Data pipeline core** (blocked on census: T1 mapping, T2 shortlist)
+**P1 -- Data pipeline core** (census resolved -- T1 mapping and T2 shortlist final)
 - `data/download.py`: fetchers per source (kaggle CLI, direct), checksums,
   into `data/raw/` (never mutated).
 - `data/remap.py`: T1 label-mapping table as data (YAML), drop-list handling;
