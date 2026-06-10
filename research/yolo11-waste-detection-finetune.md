@@ -20,6 +20,44 @@ and dedup/licensing.
 
 ## Decisions
 
+### T3: Bounding-box generation for classification-only datasets
+**Decision:** **Grounding DINO (Swin-T) via `autodistill-grounding-dino`** as
+primary auto-labeler: one prompt per material class, keep the single
+highest-confidence box per image, threshold ~0.25-0.35. Class labels come from
+the source dataset's folder, NOT the detector -- the prompt only localizes,
+which removes categorization noise (the most damaging type) by construction.
+Fallback chain per image: (1) Grounding DINO box; (2) BiRefNet mask ->
+enclosing rect when DINO returns nothing; (3) fixed center box (image minus 5%
+margin), flagged for manual review. Fallbacks will fire mostly on the
+paper/white-plastic subset.
+QA: automated checks on 100% of boxes (exactly-one-box, area-ratio <5% or >95%
+flags, per-class area/aspect z-score >3, box touching >=3 edges, confidence
+<0.3 -> review queue) + human review of a 10% stratified sample (oversampling
+paper/white-plastic) and all flagged images, accept at IoU >= 0.8.
+Acceptance: <=10% of sampled boxes failing review overall, <=20% on
+localization-only grounds. Cross-check: measure IoU of our auto-boxes against
+the human-annotated TrashNet on Roboflow Universe (Polygence, 2,524 images) --
+target median IoU >= 0.8, reported in the paper.
+**Why:** ~24% of TrashNet is paper on white posterboard -- the documented
+failure case for every contrast-based method (Otsu collapse on non-bimodal
+histograms, GrabCut mislabeling, rembg/U2-Net shadow-and-gap failures on
+white-on-white -- F15). Grounding DINO detects semantically, not by contrast;
+it is Apache-2.0 end-to-end, and auto-labels reach ~90-95% of human-label
+downstream mAP on harder benchmarks than ours (F15). At 20% pure localization
+noise the cost is only ~2 mAP, so the <=10% mixed-error budget keeps expected
+degradation in the 1-2 mAP range (F16). ~0.3-0.4 s/image: the full corpus
+labels in minutes on a T4.
+**Alternatives rejected:** Otsu/contours/GrabCut as primary (white-on-white
+collapse); rembg/U2-Net as primary (same); YOLO-World (GPL-3.0 -- viral
+license); Grounding DINO 1.5 (closed weights, paid API -- kills
+reproducibility); Roboflow Auto Label as a dependency (credit-metered,
+forced-public data on the free tier); full-image boxes as primary (systematic
+bias, not random noise -- model regresses frame-sized boxes; kept only as
+flagged last-resort fallback). Note: Stanford precedents hand-cropped TrashNet
+rather than auto-thresholding it -- no published classical pipeline succeeded
+on raw TrashNet (F15).
+**Confidence:** high.
+
 ### T5: Augmentation recipe (closing the public-data -> ESP32-CAM gap)
 **Decision:** Two layers.
 Native Ultralytics args: `degrees=180`, `flipud=0.5`, `fliplr=0.5` (top-down =
