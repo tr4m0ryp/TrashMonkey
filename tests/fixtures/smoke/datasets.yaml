@@ -1,0 +1,40 @@
+# Synthetic fixture registry for the end-to-end smoke harness (task 016).
+# Archives contain PIL-drawn colored shapes on white, seed 42 -- NO real
+# dataset content. `ref` paths are repo-root-relative; the smoke harness
+# resolves them to absolute paths when materializing the workdir registry.
+# Regenerate the archives with:
+#   PYTHONPATH=src python -m yolo_waste_sorter.smoke --regen-fixtures
+sources:
+  - name: alpha
+    fetcher:
+      kind: local
+      ref: tests/fixtures/smoke/alpha.zip
+      sha256: null
+    license: synthetic (generated in-repo, seed 42)
+    attribution: PIL-drawn synthetic shapes on white background (smoke fixture)
+    annotation_type: cls
+    background: clean
+    mapping:
+      bottle: plastic
+      sheet: paper
+      box: cardboard
+      can: metal
+      jar: glass
+      peel: organic
+      junk: DROP
+    drops: [junk]
+    # Tiny per-source cap so the balance stage's clamping path is exercised.
+    cap:
+      plastic: 3
+  - name: beta
+    fetcher:
+      kind: local
+      ref: tests/fixtures/smoke/beta.zip
+      sha256: null
+    license: synthetic (generated in-repo, seed 42)
+    attribution: PIL-drawn synthetic shapes on white background (smoke fixture)
+    annotation_type: cls
+    background: clean
+    mapping:
+      jar: glass
+      peel: organic
