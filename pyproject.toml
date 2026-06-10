@@ -12,6 +12,14 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest", "mypy", "ruff"]
 research = ["numpy", "pandas", "matplotlib", "jupyter"]
+# Auto-boxing chain (T3). rembg's BiRefNet session ships in the base package
+# (>=2.0.59); the [cpu] extra supplies onnxruntime (swap in onnxruntime-gpu
+# for CUDA inference).
+boxing = [
+    "autodistill>=0.1.29,<0.2",
+    "autodistill-grounding-dino>=0.1.4,<0.2",
+    "rembg[cpu]>=2.0.59,<3",
+]
 
 [tool.ruff]
 line-length = 100
@@ -20,9 +28,21 @@ line-length = 100
 strict = true
 
 [[tool.mypy.overrides]]
+<<<<<<< HEAD
 # Untyped third-party imports: PyYAML ships no stubs; numpy/torch are optional
 # imports in utils.seed and absent from lint environments.
 module = ["yaml", "numpy", "numpy.*", "torch", "torch.*"]
+=======
+# Optional heavy deps, imported lazily; untyped and absent from lint envs.
+module = [
+    "torch",
+    "torch.*",
+    "autodistill",
+    "autodistill.*",
+    "autodistill_grounding_dino",
+    "rembg",
+]
+>>>>>>> agent/agent-a8e06b4e3d57af60c
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
