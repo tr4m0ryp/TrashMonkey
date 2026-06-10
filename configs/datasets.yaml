@@ -62,9 +62,8 @@ sources:
       # (data/dataset-resized.zip on master); the project has no GitHub
       # releases, so this raw URL is the canonical fetch path.
       ref: https://github.com/garythung/trashnet/raw/master/data/dataset-resized.zip
-      # null until the first real fetch -- fill from
-      # data/raw/trashnet/.manifest.json after `python -m yolo_waste_sorter.data.download`.
-      sha256: null
+      # pinned from the 2026-06-10 acceptance fetch (data/raw/trashnet/.manifest.json)
+      sha256: 0bf472790f8b20e5c950d5b5012a9d38af0d3392efd65f8ce171334fc16b07c2
     license: MIT
     attribution: >-
       Gary Thung and Mindy Yang, TrashNet (github.com/garythung/trashnet),
