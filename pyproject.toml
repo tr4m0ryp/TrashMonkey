@@ -36,6 +36,8 @@ module = [
     "numpy.*",
     "torch",
     "torch.*",
+    "ultralytics",
+    "ultralytics.*",
     "albumentations",
     "albumentations.*",
     "autodistill",
