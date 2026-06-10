@@ -50,6 +50,63 @@ built from the census drop list (T9). The engine artifact ships with a
 
 ## Decisions
 
+### T1: Label-mapping table (source taxonomies -> six classes)
+**Decision:** Five ingested sources, total mapping (every label maps or DROPs;
+DROP routes to the wilderness probe pool, never to training):
+- **TrashNet**: cardboard->cardboard, glass->glass, metal->metal,
+  paper->paper, plastic->plastic, trash->DROP.
+- **Drinking Waste Classification**: AluCan->metal, Glass->glass,
+  PET->plastic, HDPEM->plastic. (Ships its own YOLO boxes -- no autoboxing.)
+- **Garbage Classification 3** (Kaggle mirror viswaprakash1990/
+  garbage-detection, YOLO boxes): PAPER->paper, PLASTIC->plastic,
+  GLASS->glass, METAL->metal, CARDBOARD->cardboard, BIODEGRADABLE->organic,
+  CLOTH->DROP.
+- **RealWaste**: Cardboard->cardboard, Glass->glass, Metal->metal,
+  Paper->paper, Plastic->plastic, Food Organics->organic, Vegetation->organic,
+  Miscellaneous Trash->DROP, Textile Trash->DROP.
+- **alistairking Recyclable & Household**: ~30 material-specific folders;
+  obvious material mappings (e.g. aerosol_cans->metal, plastic_water_bottles->
+  plastic, food_waste/eggshells/coffee_grounds/tea_bags->organic,
+  glass_*->glass, *cardboard*->cardboard, paper_*->paper); non-sortable
+  categories (batteries, clothing, shoes, electronics-like) -> DROP. Task 006
+  enumerates the actual folder list after fetch and completes the table
+  mechanically under these rules.
+Glass color variants always collapse to glass; resin codes (PET/HDPE) collapse
+to plastic; food/vegetation/biodegradable collapse to organic.
+**Why:** Material-level mapping is unambiguous for these taxonomies (F18); the
+DROP list doubles as the open-set probe (T9) -- battery/clothes/shoes/textile/
+misc-trash are exactly the "none of the six" objects demo visitors will throw
+at the machine.
+**Alternatives rejected:** Ingesting mostafaabla/sumn2u material classes
+(TrashNet-repack lineage would inflate duplicates -- F20); TACO's 60-category
+fine taxonomy (vision C2).
+**Confidence:** high.
+
+### T2: Dataset shortlist (re-weighted for white-background deployment)
+**Decision:** Core training = clean/semi-clean single-object sources:
+TrashNet (MIT, white posterboard, 2,527), Drinking Waste (CC0, 4,828 with
+boxes), Garbage Classification 3 (CC BY 4.0, 10,464 with boxes, has organic),
+alistairking studio+real_world (MIT, ~30 classes x ~500). RealWaste (CC BY
+4.0, 4,752, real degraded items, all six classes) is ingested but HELD OUT
+ENTIRELY as TEST-1 (leave-one-source-out, T6: `eval.leave_out_source:
+realwaste`).
+Cluttered-scene sets (TACO, ZeroWaste) are EXCLUDED from training: the
+clean<->cluttered domain gap is measured and large -- training on pristine
+material yields 49.69% in a real environment vs 89.19% when training
+in-domain (F19); ZeroWaste's authors call cross-use "impossible". Our
+deployment is the clean side, so we train clean and keep TACO-style data out.
+**Why:** Census evidence (F18, F19); permissive-license constraint for the
+paper (all five sources are MIT/CC0/CC BY 4.0 -- T10).
+**Alternatives rejected:** WaDaBa (contract-gated access, plastics-only,
+PET-dominated); mostafaabla 12-class (ODbL + repack lineage); sumn2u (count
+and license inconsistencies flagged in census); CompostNet (no license);
+techsash organic 13,966 and Fruits-360 (CC BY-SA, off-domain/tiny-resolution
+-- held as RESERVE if organic falls short); TACO as downweighted training data
+(evidence says it hurts the clean-domain optimum; eval-only use possible
+later).
+**Confidence:** high on the shortlist; medium on alistairking's per-folder
+counts (census verified its organic split; 006 verifies the rest at fetch).
+
 ### T3: Bounding-box generation for classification-only datasets
 **Decision:** **Grounding DINO (Swin-T) via `autodistill-grounding-dino`** as
 primary auto-labeler: one prompt per material class, keep the single
