@@ -28,13 +28,12 @@ line-length = 100
 strict = true
 
 [[tool.mypy.overrides]]
-<<<<<<< HEAD
-# Untyped third-party imports: PyYAML ships no stubs; numpy/torch are optional
-# imports in utils.seed and absent from lint environments.
-module = ["yaml", "numpy", "numpy.*", "torch", "torch.*"]
-=======
-# Optional heavy deps, imported lazily; untyped and absent from lint envs.
+# Untyped / optional third-party imports: PyYAML ships no stubs; numpy/torch
+# are optional imports in utils.seed; the boxing deps are lazy imports.
 module = [
+    "yaml",
+    "numpy",
+    "numpy.*",
     "torch",
     "torch.*",
     "autodistill",
@@ -42,7 +41,6 @@ module = [
     "autodistill_grounding_dino",
     "rembg",
 ]
->>>>>>> agent/agent-a8e06b4e3d57af60c
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
