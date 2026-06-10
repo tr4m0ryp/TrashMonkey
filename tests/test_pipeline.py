@@ -1,0 +1,331 @@
+"""Pipeline CLI tests: ordering, resume, --force, QA gate, and a real end-to-end run.
+
+NO network, NO model downloads: fixture sources go through the local fetcher
+and the autobox chain runs with injected fake backends.
+"""
+
+from __future__ import annotations
+
+import dataclasses
+import io
+import zipfile
+from pathlib import Path
+
+import numpy as np
+import pytest
+import yaml
+from PIL import Image
+
+from yolo_waste_sorter.data.autobox import Detection
+from yolo_waste_sorter.data.pipeline import (
+    PipelineContext,
+    PipelineHalt,
+    Stage,
+    StageError,
+    build_context,
+    build_stages,
+    main,
+    run_pipeline,
+)
+from yolo_waste_sorter.data.pipeline.stages.qa import _draw_sample
+from yolo_waste_sorter.data.qa import ImageQA, QAReport
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+# --- fixture: two local cls sources + a tmp config/datasets pair ----------------
+
+
+def png_bytes(seed: int) -> bytes:
+    rng = np.random.default_rng(seed)
+    arr = rng.integers(0, 256, size=(64, 64, 3), dtype=np.uint8)
+    buf = io.BytesIO()
+    Image.fromarray(arr, "RGB").save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def make_zip(path: Path, members: dict[str, bytes]) -> None:
+    with zipfile.ZipFile(path, "w") as zf:
+        for name, blob in members.items():
+            zf.writestr(name, blob)
+
+
+def source_entry(
+    name: str, archive: Path, mapping: dict[str, str], drops: list[str]
+) -> dict[str, object]:
+    return {
+        "name": name,
+        "fetcher": {"kind": "local", "ref": str(archive), "sha256": None},
+        "license": "MIT",
+        "attribution": f"synthetic fixture source {name}",
+        "annotation_type": "cls",
+        "background": "clean",
+        "mapping": mapping,
+        "drops": drops,
+    }
+
+
+def write_fixture(tmp_path: Path) -> Path:
+    """alpha: plastic x2, paper, cardboard, metal + one DROP; beta: glass, organic.
+
+    beta is the leave-out (TEST-1) source. Every config class gets a directory
+    (scan_remapped requires all six) and the DROP image feeds the wilderness
+    pool, with the smallest image count that still exercises every stage.
+    """
+    archives = tmp_path / "archives"
+    archives.mkdir()
+    make_zip(
+        archives / "alpha.zip",
+        {
+            "bottle/a1.png": png_bytes(1),
+            "bottle/a2.png": png_bytes(2),
+            "sheet/a3.png": png_bytes(3),
+            "box/a4.png": png_bytes(4),
+            "can/a5.png": png_bytes(5),
+            "junk/a6.png": png_bytes(6),
+        },
+    )
+    make_zip(archives / "beta.zip", {"jar/b1.png": png_bytes(7), "peel/b2.png": png_bytes(8)})
+    datasets = {
+        "sources": [
+            source_entry(
+                "alpha",
+                archives / "alpha.zip",
+                {
+                    "bottle": "plastic",
+                    "sheet": "paper",
+                    "box": "cardboard",
+                    "can": "metal",
+                    "junk": "DROP",
+                },
+                ["junk"],
+            ),
+            source_entry("beta", archives / "beta.zip", {"jar": "glass", "peel": "organic"}, []),
+        ]
+    }
+    raw_cfg = yaml.safe_load((REPO_ROOT / "configs" / "config.yaml").read_text())
+    raw_cfg["paths"] = {
+        key: str(tmp_path / "data" / key) for key in ("raw", "interim", "processed", "external")
+    } | {"models": str(tmp_path / "models"), "reports": str(tmp_path / "reports")}
+    raw_cfg["eval"]["leave_out_source"] = "beta"
+    raw_cfg["eval"]["val_fraction"] = 0.5
+    cfg_dir = tmp_path / "configs"
+    cfg_dir.mkdir()
+    (cfg_dir / "config.yaml").write_text(yaml.safe_dump(raw_cfg))
+    (cfg_dir / "datasets.yaml").write_text(yaml.safe_dump(datasets))
+    return cfg_dir / "config.yaml"
+
+
+def fake_dino(image_path: Path) -> list[Detection]:
+    with Image.open(image_path) as img:
+        width, height = img.size
+    box = (width * 0.25, height * 0.25, width * 0.75, height * 0.75)
+    return [Detection(xyxy=box, confidence=0.9)]
+
+
+def fail_mask(image_path: Path) -> object:
+    raise AssertionError(f"birefnet fallback must not fire for {image_path}")
+
+
+@pytest.fixture
+def ctx(tmp_path: Path) -> PipelineContext:
+    base = build_context(write_fixture(tmp_path))
+    return dataclasses.replace(base, dino_predict=fake_dino, birefnet_mask=fail_mask)
+
+
+# --- fake-stage runner behaviour ------------------------------------------------
+
+
+def fake_stage(
+    name: str,
+    log: list[str],
+    completed: set[str],
+    *,
+    fail: bool = False,
+    halt_unless_ack: bool = False,
+) -> Stage:
+    def run(ctx: PipelineContext) -> str:
+        if halt_unless_ack and not ctx.ack_review:
+            raise PipelineHalt(f"{name}: review needed")
+        if fail:
+            raise RuntimeError("boom")
+        log.append(name)
+        completed.add(name)
+        return "ok"
+
+    return Stage(name=name, run=run, is_complete=lambda ctx: name in completed, hint=f"fix {name}")
+
+
+def test_stages_run_in_declared_order(ctx: PipelineContext) -> None:
+    log: list[str] = []
+    done: set[str] = set()
+    stages = [fake_stage(n, log, done) for n in ("a", "b", "c")]
+    actions = run_pipeline(stages, ctx)
+    assert log == ["a", "b", "c"]
+    assert actions == {"a": "ran", "b": "ran", "c": "ran"}
+
+
+def test_resume_skips_completed_stages(ctx: PipelineContext) -> None:
+    log: list[str] = []
+    done = {"a", "b"}  # stages 1-2 already complete
+    stages = [fake_stage(n, log, done) for n in ("a", "b", "c")]
+    actions = run_pipeline(stages, ctx)
+    assert log == ["c"]
+    assert actions == {"a": "skipped", "b": "skipped", "c": "ran"}
+    log.clear()
+    assert run_pipeline(stages, ctx) == {n: "skipped" for n in ("a", "b", "c")}
+    assert log == []
+
+
+def test_force_reruns_completed_stages(ctx: PipelineContext) -> None:
+    log: list[str] = []
+    done = {"a", "b", "c"}
+    stages = [fake_stage(n, log, done) for n in ("a", "b", "c")]
+    assert run_pipeline(stages, ctx, force=True) == {n: "ran" for n in ("a", "b", "c")}
+    assert log == ["a", "b", "c"]
+
+
+def test_force_from_named_stage(ctx: PipelineContext) -> None:
+    log: list[str] = []
+    done = {"a", "b", "c"}
+    stages = [fake_stage(n, log, done) for n in ("a", "b", "c")]
+    actions = run_pipeline(stages, ctx, start="b", force=True)
+    assert log == ["b", "c"]
+    assert actions == {"a": "skipped", "b": "ran", "c": "ran"}
+
+
+def test_start_stage_requires_earlier_complete(ctx: PipelineContext) -> None:
+    stages = [fake_stage(n, [], set()) for n in ("a", "b")]
+    with pytest.raises(StageError, match="stage 'a' is not complete"):
+        run_pipeline(stages, ctx, start="b")
+    with pytest.raises(StageError, match="unknown stage 'z'"):
+        run_pipeline(stages, ctx, start="z")
+
+
+def test_failure_names_stage_and_hint(ctx: PipelineContext) -> None:
+    log: list[str] = []
+    stages = [
+        fake_stage("a", log, set()),
+        fake_stage("b", log, set(), fail=True),
+        fake_stage("c", log, set()),
+    ]
+    with pytest.raises(StageError, match=r"stage 'b' failed: boom -- hint: fix b"):
+        run_pipeline(stages, ctx)
+    assert log == ["a"]  # stopped on first failure
+
+
+def test_qa_halt_and_ack_review(ctx: PipelineContext) -> None:
+    log: list[str] = []
+    done: set[str] = set()
+    stages = [
+        fake_stage("a", log, done),
+        fake_stage("qa", log, done, halt_unless_ack=True),
+        fake_stage("c", log, done),
+    ]
+    with pytest.raises(PipelineHalt, match="review needed"):
+        run_pipeline(stages, ctx)
+    assert log == ["a"] and "qa" not in done
+    acked = dataclasses.replace(ctx, ack_review=True)
+    assert run_pipeline(stages, acked) == {"a": "skipped", "qa": "ran", "c": "ran"}
+    assert log == ["a", "qa", "c"]
+
+
+# --- QA sampling: paper + plastic oversampled ------------------------------------
+
+
+def report_of(group: str, n: int) -> QAReport:
+    images = {
+        f"{group}{i}": ImageQA(
+            image=f"{group}{i}.png",
+            stem=f"{group}{i}",
+            source="alpha",
+            method="dino",
+            confidence=0.9,
+            n_boxes=1,
+            class_id=0,
+        )
+        for i in range(n)
+    }
+    return QAReport(labels_dir=f"/tmp/{group}", images=images)
+
+
+def test_review_sample_oversamples_paper_and_plastic() -> None:
+    reports = {"paper": report_of("paper", 20), "metal": report_of("metal", 20)}
+    drawn = _draw_sample(reports, seed=42)
+    by_group = {g: sum(1 for grp, _ in drawn if grp == g) for g in reports}
+    assert by_group == {"paper": 4, "metal": 2}  # ceil(0.20*20) vs ceil(0.10*20)
+
+
+# --- integration: real stage wrappers over the tmpdir fixture --------------------
+
+
+def test_full_pipeline_halts_at_qa_then_resumes_to_dataset(ctx: PipelineContext) -> None:
+    stages = build_stages()
+    with pytest.raises(PipelineHalt, match="--ack-review"):
+        run_pipeline(stages, ctx)
+    interim = ctx.interim_root
+    assert (interim / "pipeline" / "autobox.yaml").is_file()
+    assert (interim / "review" / "sample.csv").is_file()
+    assert not (interim / "pipeline" / "qa.yaml").exists()  # gate blocked completion
+    # wilderness pool boxed with placeholder class 0
+    wilderness_label = interim / "wilderness" / "alpha__a6.txt"
+    assert wilderness_label.read_text().startswith("0 ")
+    assert (interim / "autobox" / "wilderness" / "provenance.jsonl").is_file()
+
+    acked = dataclasses.replace(ctx, ack_review=True)
+    actions = run_pipeline(stages, acked)
+    assert actions == {
+        "download": "skipped",
+        "remap": "skipped",
+        "autobox": "skipped",
+        "qa": "ran",
+        "dedup": "ran",
+        "balance": "ran",
+        "split": "ran",
+    }
+
+    root = ctx.processed_root / ctx.cfg.experiment.name
+    spec = yaml.safe_load((root / "dataset.yaml").read_text())
+    assert spec["names"] == dict(enumerate(ctx.cfg.classes))
+    for split in ("train", "val", "test"):
+        images = sorted((root / "images" / split).iterdir())
+        assert images, f"empty split: {split}"
+        for image in images:
+            assert (root / "labels" / split / f"{image.stem}.txt").is_file()
+    # TEST-1: the leave-out source is exactly the test split
+    test_names = {p.name for p in (root / "images" / "test").iterdir()}
+    assert test_names == {"glass__beta__b1.png", "organic__beta__b2.png"}
+    trainval = [
+        p.name for s in ("train", "val") for p in (root / "images" / s).iterdir()
+    ]
+    assert all("beta__" not in name for name in trainval)
+
+    # idempotent rerun: everything now skips
+    assert run_pipeline(stages, acked) == {name: "skipped" for name in actions}
+
+
+def test_pipeline_is_seeded_and_deterministic(tmp_path: Path) -> None:
+    manifests = []
+    for run_dir in (tmp_path / "one", tmp_path / "two"):
+        run_dir.mkdir()
+        base = build_context(write_fixture(run_dir))
+        run_ctx = dataclasses.replace(
+            base, ack_review=True, dino_predict=fake_dino, birefnet_mask=fail_mask
+        )
+        run_pipeline(build_stages(), run_ctx)
+        manifest = yaml.safe_load(run_ctx.manifest_path("split").read_text())
+        manifests.append((manifest["assignments"], manifest["counts"]))
+    assert manifests[0] == manifests[1]
+
+
+# --- CLI + Makefile wiring --------------------------------------------------------
+
+
+def test_cli_reports_config_error(tmp_path: Path) -> None:
+    assert main(["run", "--config", str(tmp_path / "missing.yaml")]) == 1
+
+
+def test_make_repro_invokes_pipeline_cli() -> None:
+    recipe = (REPO_ROOT / "Makefile").read_text().split("repro:")[1]
+    assert "-m yolo_waste_sorter.data.pipeline run" in recipe
+    assert "TODO" not in recipe
