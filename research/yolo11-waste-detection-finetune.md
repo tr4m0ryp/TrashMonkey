@@ -16,13 +16,16 @@ and dedup/licensing.
 
 ## Recommended Technical Design
 
-Build one merged, deduplicated, license-attributed YOLO dataset (~5-10k images)
-from clean-background public waste sets remapped to the six classes
-[exact source mix and mapping table: T1/T2, pending census]. Classification-only
-sources get boxes from **Grounding DINO** (class label from the source folder,
-the prompt only localizes), with a BiRefNet-mask fallback and a flagged
-center-box last resort, gated by automated QA plus a 10% stratified human
-review (T3).
+Build one merged, deduplicated, license-attributed YOLO dataset (~9k images,
+1,500/class cap) from five clean/semi-clean public sources -- TrashNet,
+Drinking Waste, Garbage Classification 3, alistairking household-waste
+(training) and RealWaste (held out entirely as TEST-1) -- remapped to the six
+classes per the T1 table; cluttered sets (TACO/ZeroWaste) are excluded by
+measured domain-gap evidence (T2). Classification-only sources get boxes from
+**Grounding DINO** (class label from the source folder, the prompt only
+localizes), with a BiRefNet-mask fallback and a flagged center-box last
+resort, gated by automated QA plus a 10% stratified human review (T3); two
+sources ship native YOLO boxes and skip autoboxing.
 
 Fine-tune **yolo11n** from COCO weights with a pinned recipe -- AdamW lr0=0.001,
 100 epochs, batch 16, imgsz 640, full fine-tune, cache=disk, seed 42 (T7) --
