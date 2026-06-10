@@ -64,8 +64,10 @@ augment:
   shear: 0.0
   perspective: 0.0
   copy_paste: 0.0
+  # Keys are snake_case Albumentations transform names; inner keys are the
+  # transforms' constructor kwargs (build_train_stack passes them through).
   esp32_stack:
-    jpeg:
+    image_compression:
       quality_range: [50, 85]
       p: 0.5
     iso_noise:
@@ -73,7 +75,7 @@ augment:
     gauss_noise:
       p: 0.2
     motion_blur:
-      limit: [3, 7]
+      blur_limit: [3, 7]
       p: 0.3
     defocus:
       radius: [1, 3]
@@ -81,9 +83,9 @@ augment:
     planckian_jitter:
       p: 0.3
     downscale:
-      range: [0.4, 0.75]
+      scale_range: [0.4, 0.75]
       p: 0.3
-    brightness_contrast:
+    random_brightness_contrast:
       p: 0.2
 
 # T6 three-tier eval. val_fraction and leave_out_source stay null until the
