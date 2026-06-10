@@ -10,14 +10,14 @@ from pathlib import Path
 from yolo_waste_sorter.data.download.errors import DatasetConfigError, DownloadError
 from yolo_waste_sorter.data.download.pipeline import download_source
 from yolo_waste_sorter.data.download.registry import load_registry
-from yolo_waste_sorter.utils.seed import load_config
+from yolo_waste_sorter.utils.config import load_config
 
 
 def _target_classes(config_path: Path) -> list[str]:
-    classes = load_config(config_path).get("classes")
-    if not isinstance(classes, list) or not all(isinstance(c, str) for c in classes):
-        raise DatasetConfigError(f"'classes' in {config_path} must be a list of strings")
-    return classes
+    classes = load_config(config_path).classes
+    if not classes:
+        raise DatasetConfigError(f"'classes' in {config_path} must be a non-empty list")
+    return list(classes)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
