@@ -112,6 +112,68 @@ speed pressure: 4.57 ms/frame FP16 on the target, F6).
 Caveat: YOLO11's backbone is layers 0-10, so a backbone freeze is `freeze=11`,
 not the `freeze=10` quoted in YOLOv8-era material (F2).
 
+### T8: Export/deployment chain
+**Decision:** Pin **JetPack 6.2.2** (L4T 36.5.0; CUDA 12.6, TensorRT 10.3.0,
+cuDNN 9.3). Enable MAXN SUPER (`sudo nvpmodel -m 2 && sudo jetson_clocks`).
+Runtime via the official `ultralytics/ultralytics:latest-jetson-jetpack6`
+docker image (native install with Jetson torch wheels as fallback). Export
+**on the Jetson**: `yolo export model=best.pt format=engine half=True
+imgsz=640` -- TensorRT engines are non-portable across TRT versions and compute
+capabilities (Orin is SM 8.7). FP16, static batch=1.
+Ingest: cameras at SVGA 800x600 (~8-12 fps stock firmware, ~27 KB JPEG), one
+grab-latest daemon thread per camera (continuous `cap.grab()`, keep newest --
+`CAP_PROP_BUFFERSIZE` is unreliable on HTTP streams), single inference loop
+round-robins the three latest frames on one engine. Plain Python; no
+DeepStream, no Triton, no GStreamer. Dedicated 2.4 GHz AP for the cams, solid
+5 V supply (undervoltage measurably drops fps).
+**Why:** yolo11n TensorRT FP16 is ~4.9 ms/frame on this exact board (F6/F11) --
+the ESP32-CAM at ~8 fps is the bottleneck, not the Orin; the GPU could serve
+each camera at 13-22 Hz. End-to-end glass-to-decision is ~90-160 ms typical
+(~0.5 s worst with WiFi jitter), so a 5-frame consensus completes in ~0.6 s
+against the 1-2 s conveyor budget. JetPack 7.x ecosystem (torch wheels,
+containers) had not caught up for Orin Nano as of mid-2026. DeepStream pays
+off at tens of hardware-decodable RTSP streams; 3x MJPEG/HTTP at 8 fps with a
+5 ms model gives it nothing to optimize, and it does not natively ingest
+HTTP-MJPEG anyway.
+**Alternatives rejected:** INT8 (saves ~1 ms against a >=1000 ms budget; needs
+>=500-image on-device calibration; TRT 10.3 has an INT8+end2end build bug --
+revisit only for power/thermals); UXGA capture (1.29 fps -- blows the budget);
+DeepStream/Triton (overhead without benefit at this scale); exporting the
+engine on a desktop GPU (engines don't deserialize across SM/TRT).
+**Confidence:** high. Headroom note: yolo11s at 7.3 ms FP16 also fits if T7
+escalation triggers.
+
+### T9: Confidence-threshold policy for the rest-bin rule
+**Decision:** Multi-frame consensus, not a single high threshold.
+Per frame: run at permissive `conf=0.25`. A frame casts a qualified vote for
+class c if its top detection is c with score >= tau_frame (start 0.40).
+Sort to bin c iff over the object's 5-15 sightings: (a) >= 3 qualified votes
+for c, (b) c holds a strict majority of qualified votes, (c) max single-frame
+score for c >= 0.60 (high-water gate). Otherwise -> rest bin.
+Thresholds start global; switch to per-class iff the confidence achieving
+precision >= 0.95 spans more than ~0.1 across classes on the val curves
+(likely under imbalanced remapped data). No calibration in v1 (cost-curve
+tuning absorbs miscalibration).
+Tuning procedure: build a val sim including a "wilderness" set of non-class
+objects; grid-sweep tau_frame x K x high-water threshold; plot wrong-bin rate
+vs rest-rate; pick the Pareto knee subject to wrong-bin <= 1-2%. Tune on
+DEGRADED (TEST-2-style) frames and re-verify on the exported FP16 engine --
+quantization shifts score distributions.
+**Why:** YOLOv8/11 has no objectness branch -- the score IS the per-class
+sigmoid, miscalibrated and overconfident (F12). Single-frame thresholding is a
+leaky open-set filter: naive score rejection lets 71-81% of out-of-distribution
+objects through at 95% TPR (F13). Consensus converts per-frame error to
+per-object error roughly binomially, so a LOWER per-frame threshold + agreement
+rule dominates one high threshold: same wrong-bin protection, lower rest-rate.
+Direct conveyor precedent: YOLOv8 + per-track majority vote (F14).
+**Alternatives rejected:** Single high global threshold (worse rest-rate at
+equal contamination); energy-score OOD heads (needs pre-sigmoid logits --
+invasive on a TensorRT pipeline; deferred); training a 7th "other" class
+(rejected at vision level, C3); temperature scaling in v1 (doesn't change
+ranking; only needed if logic starts averaging confidences).
+**Confidence:** high on the rule shape, medium on the starting values
+(0.40/3/0.60) -- they are explicitly sweep-tuned in validation.
+
 ## Stack & Libraries
 
 <!-- pending -->
