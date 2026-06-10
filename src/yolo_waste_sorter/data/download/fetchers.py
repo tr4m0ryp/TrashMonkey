@@ -55,12 +55,35 @@ def _fetch_kaggle(spec: FetcherSpec, scratch: Path) -> Path:
     return archives[0]
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """Default TLS context, sourcing CAs from certifi when the system store is unusable.
+
+    Some local Python builds ship without a wired-up CA store (macOS framework
+    builds); certifi is the canonical CA bundle in that situation, not a
+    security downgrade.
+    """
+    context = ssl.create_default_context()
+    if context.cert_store_stats().get("x509_ca", 0) == 0:
+        try:
+            import certifi
+        except ImportError as exc:
+            raise FetchError(
+                "the Python SSL CA store is empty and certifi is not installed; "
+                "run `pip install certifi` or fix the interpreter's certificates"
+            ) from exc
+        context = ssl.create_default_context(cafile=certifi.where())
+    return context
+
+
 def _fetch_http(spec: FetcherSpec, scratch: Path) -> Path:
     filename = Path(urllib.parse.urlparse(spec.ref).path).name or "archive.bin"
     target = scratch / filename
     request = urllib.request.Request(spec.ref, headers={"User-Agent": "yolo-waste-sorter/0.1"})
     try:
-        with urllib.request.urlopen(request) as response, open(target, "wb") as out:
+        with (
+            urllib.request.urlopen(request, context=_ssl_context()) as response,
+            open(target, "wb") as out,
+        ):
             shutil.copyfileobj(response, out)
     except (urllib.error.URLError, OSError) as exc:
         raise FetchError(f"HTTP fetch of '{spec.ref}' failed: {exc}") from exc
