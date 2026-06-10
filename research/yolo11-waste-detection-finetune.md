@@ -316,6 +316,31 @@ ranking; only needed if logic starts averaging confidences).
 **Confidence:** high on the rule shape, medium on the starting values
 (0.40/3/0.60) -- they are explicitly sweep-tuned in validation.
 
+### T10: Cross-dataset dedup + license/attribution table
+**Decision:** pHash dedup as built in the pipeline (exact-dup at Hamming
+distance <=2 drops the later source's copy, deterministic source-priority =
+datasets.yaml order: trashnet > drinking-waste > garbage-detection >
+alistairking > realwaste; near-dup band 3-8 forms instance groups that never
+straddle splits). The per-source-pair overlap matrix is emitted to the paper.
+Known overlaps the dedup must catch: Drinking Waste reuses part of TrashNet's
+glass; Garbage Classification 3 is a Roboflow aggregate of unknown provenance
+and may embed TrashNet -- dedup is load-bearing there (F20).
+License table (training + eval sources, all permissive): TrashNet MIT;
+Drinking Waste CC0-1.0; Garbage Classification 3 / garbage-detection CC BY
+4.0; alistairking MIT; RealWaste CC BY 4.0; Polygence TrashNet-bbox (QA
+reference only) CC BY 4.0. Excluded-with-reason (documented in the paper):
+WaDaBa (contract-gated), mostafaabla (ODbL, repack lineage), sumn2u (license
+ambiguity), ZeroWaste (CC BY-NC), TACO (domain + per-image Flickr licenses),
+CompostNet (no license), techsash/Fruits-360 (CC BY-SA, reserve).
+**Why:** Census-verified licenses and lineage (F18, F20); the attribution
+table is generated from datasets.yaml by the pipeline (single source of
+truth), satisfying the report requirement from the vision doc.
+**Alternatives rejected:** Embedding-based dedup (overkill for repack-lineage
+duplicates, which are exact or near-exact); trusting source pages' counts
+(census found three different published counts for one dataset -- the pipeline
+re-counts everything it ingests).
+**Confidence:** high.
+
 ## Stack & Libraries
 
 | Component | Choice | Call | License | Health note |
