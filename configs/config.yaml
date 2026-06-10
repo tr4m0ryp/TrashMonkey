@@ -24,3 +24,84 @@ classes:
   - metal
   - glass
   - organic
+
+# T7 fine-tuning recipe: pinned AdamW (optimizer='auto' silently flips to SGD
+# at 10k iterations), full fine-tune (freeze: null), cache disk (cache ram
+# breaks determinism even with a fixed seed).
+train:
+  epochs: 100
+  optimizer: AdamW
+  lr0: 0.001
+  lrf: 0.01
+  momentum: 0.9
+  weight_decay: 0.0005
+  warmup_epochs: 3.0
+  batch: 16
+  imgsz: 640
+  patience: 50
+  close_mosaic: 10
+  cache: disk
+  amp: true
+  deterministic: true
+  freeze: null
+  workers: 8
+
+# T5 augmentation: native Ultralytics args plus an Albumentations stack that
+# simulates the ESP32-CAM OV2640 (JPEG blocking, sensor noise, WB drift, blur).
+# hsv_h stays at 0.015 -- hue is the material cue; PlanckianJitter covers WB.
+augment:
+  degrees: 180
+  flipud: 0.5
+  fliplr: 0.5
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.5
+  translate: 0.1
+  scale: 0.5
+  mosaic: 1.0
+  mixup: 0.0
+  cutmix: 0.0
+  shear: 0.0
+  perspective: 0.0
+  copy_paste: 0.0
+  esp32_stack:
+    jpeg:
+      quality_range: [50, 85]
+      p: 0.5
+    iso_noise:
+      p: 0.3
+    gauss_noise:
+      p: 0.2
+    motion_blur:
+      limit: [3, 7]
+      p: 0.3
+    defocus:
+      radius: [1, 3]
+      p: 0.1
+    planckian_jitter:
+      p: 0.3
+    downscale:
+      range: [0.4, 0.75]
+      p: 0.3
+    brightness_contrast:
+      p: 0.2
+
+# T6 three-tier eval. val_fraction and leave_out_source stay null until the
+# dataset census picks the held-out TEST-1 source.
+eval:
+  val_fraction: null
+  leave_out_source: null
+  test2_severities: [1, 2, 3, 4, 5]
+
+# T9 rest-bin consensus rule: permissive per-frame conf_floor, qualified votes
+# at tau_frame, min_votes + strict majority, high_water single-frame gate.
+# Starting values are sweep-tuned on degraded frames before deployment.
+thresholds:
+  conf_floor: 0.25
+  tau_frame: 0.40
+  min_votes: 3
+  high_water: 0.60
+  sweep:
+    tau_frame: [0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
+    min_votes: [2, 3, 4, 5]
+    high_water: [0.5, 0.6, 0.7]
