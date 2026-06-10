@@ -145,6 +145,23 @@ rather than auto-thresholding it -- no published classical pipeline succeeded
 on raw TrashNet (F15).
 **Confidence:** high.
 
+### T4: Per-class targets and balancing policy
+**Decision:** Cap at **1,500 images per class after dedup** (~9k total at full
+caps -- inside the C6 5-10k envelope); never duplicate/oversample; floor
+warning at 800/class. Expected supply per class (census counts, pre-dedup,
+RealWaste excluded as TEST-1): plastic ~5k+ (TrashNet 482 + DW 2,536 + GC3 +
+alistairking), metal ~2.5k, glass ~2.5k+, paper ~2k, cardboard ~1.5-2k,
+organic ~2k (GC3 biodegradable + alistairking food/vegetation folders). Every
+class clears the cap or sits near it; organic is the thinnest but exceeds the
+800 floor with margin.
+**Why:** C6 fixed capping-not-duplication; the census quantified supply (F18,
+F21) -- the earlier organic-thinness worry resolves without reserve sources.
+**Alternatives rejected:** Pulling techsash's 13,966 in-the-wild organic
+images (off-domain bulk vs a class that is already sufficient); higher caps
+(pushes past 10k and amplifies the GC3 unknown-provenance share).
+**Confidence:** medium-high -- exact post-dedup numbers come out of the
+pipeline's manifest; the cap/floor policy is robust to them.
+
 ### T5: Augmentation recipe (closing the public-data -> ESP32-CAM gap)
 **Decision:** Two layers.
 Native Ultralytics args: `degrees=180`, `flipud=0.5`, `fliplr=0.5` (top-down =
