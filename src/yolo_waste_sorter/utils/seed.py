@@ -1,11 +1,10 @@
-"""Determinism + config helpers. Keep minimal."""
+"""Determinism helpers. Keep minimal.
+
+Config access lives in yolo_waste_sorter.utils.config (typed loader).
+"""
 
 import os
 import random
-from pathlib import Path
-from typing import Any
-
-import yaml
 
 
 def set_seed(seed: int = 42) -> None:
@@ -24,8 +23,3 @@ def set_seed(seed: int = 42) -> None:
         torch.cuda.manual_seed_all(seed)
     except ImportError:
         pass
-
-
-def load_config(path: str | Path = "configs/config.yaml") -> dict[str, Any]:
-    with open(path) as f:
-        return yaml.safe_load(f)
