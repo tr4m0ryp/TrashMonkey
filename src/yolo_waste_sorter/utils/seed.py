@@ -28,4 +28,7 @@ def set_seed(seed: int = 42) -> None:
 
 def load_config(path: str | Path = "configs/config.yaml") -> dict[str, Any]:
     with open(path) as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+    if not isinstance(config, dict):
+        raise TypeError(f"config root must be a mapping, got {type(config).__name__}: {path}")
+    return config
