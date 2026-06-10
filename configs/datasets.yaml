@@ -1,0 +1,52 @@
+# Source registry for the dataset download stage.
+# Loaded + validated by src/yolo_waste_sorter/data/download/registry.py.
+# Unknown keys fail fast with the offending key named in the error.
+#
+# Schema, per entry under `sources` (exact shape other tasks depend on):
+#   name:            unique source id; archive contents land in data/raw/<name>/
+#   fetcher:
+#     kind:          kaggle | http | local
+#     ref:           kaggle dataset slug, http(s) URL, or local filesystem path
+#     sha256:        hex digest of the fetched archive, or null before the first
+#                    real fetch. After fetching, copy the recorded value from
+#                    data/raw/<name>/.manifest.json (or run
+#                    `shasum -a 256 <archive>`) into this field so later runs
+#                    verify against it.
+#   license:         SPDX id / short license name (feeds the paper attribution table)
+#   attribution:     human-readable credit line for the paper
+#   annotation_type: cls | det   (classification folders vs detection boxes)
+#   background:      clean | wild (white/plain presentation vs in-the-wild)
+#   mapping:         <source_label>: <target_class|DROP>; target classes come from
+#                    configs/config.yaml `classes`; DROP routes the label out of
+#                    training (remap stage sends it to the wilderness probe set)
+#   drops:           optional convenience list of source labels to drop (same
+#                    effect as mapping the label to DROP)
+#   cap:             optional per-target-class image caps, applied at balancing
+#
+# Census-dependent sources (T1/T2) are registered by a later task.
+
+sources:
+  - name: trashnet
+    fetcher:
+      kind: http
+      # Canonical archive: the repo distributes dataset-resized.zip in-tree
+      # (data/dataset-resized.zip on master); the project has no GitHub
+      # releases, so this raw URL is the canonical fetch path.
+      ref: https://github.com/garythung/trashnet/raw/master/data/dataset-resized.zip
+      # null until the first real fetch -- fill from
+      # data/raw/trashnet/.manifest.json after `python -m yolo_waste_sorter.data.download`.
+      sha256: null
+    license: MIT
+    attribution: >-
+      Gary Thung and Mindy Yang, TrashNet (github.com/garythung/trashnet),
+      2,527 images at 512x384, single object on white posterboard
+    annotation_type: cls
+    background: clean
+    mapping:
+      plastic: plastic     # 482 images (F17)
+      paper: paper         # 594
+      cardboard: cardboard # 403
+      metal: metal         # 410
+      glass: glass         # 501
+      trash: DROP          # 137 -- maps to none of the six target classes (F17)
+    drops: [trash]
