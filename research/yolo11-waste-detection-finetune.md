@@ -202,9 +202,9 @@ calibrate once a real ESP32-CAM frame sample exists.
    class, grouped by physical object instance (all photos of one item stay on
    one side). Drives model selection, early stopping, threshold sweeps. An
    optimistic ceiling, never a deployment claim.
-2. **TEST-1 (dataset shift)** -- leave-one-SOURCE-out: an entire public dataset
-   never trained on, chosen for deployment-like presentation (single object,
-   clean background).
+2. **TEST-1 (dataset shift)** -- leave-one-SOURCE-out: **RealWaste** (post-
+   census decision) -- all six classes, real degraded single items, never
+   trained on; `eval.leave_out_source: realwaste`.
 3. **TEST-2 (demo-day estimate)** -- degraded copies of TEST-1 through the
    ESP32 pipeline (downscale to 800x600 and back, JPEG re-encode q60-80,
    ISO/Gaussian noise, Planckian WB shift, mild motion blur) at 3-5 severity
