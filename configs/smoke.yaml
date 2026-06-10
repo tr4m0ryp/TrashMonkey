@@ -114,3 +114,13 @@ thresholds:
     tau_frame: [0.4, 0.6]
     min_votes: [1, 2]
     high_water: [0.8]
+
+# Deploy section required by the config schema; values irrelevant to smoke
+# (no runtime is started) but must validate.
+deploy:
+  cameras:
+    - http://127.0.0.1:81/stream
+  window_seconds: 1.5
+  engine: models/best.engine
+  reconnect_backoff_s: 2.0
+  stale_after_s: 1.0
