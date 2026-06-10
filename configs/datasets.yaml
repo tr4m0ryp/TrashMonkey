@@ -23,7 +23,36 @@
 #                    effect as mapping the label to DROP)
 #   cap:             optional per-target-class image caps, applied at balancing
 #
-# Census-dependent sources (T1/T2) are registered by a later task.
+# Source ORDER below is the cross-dataset dedup priority (T10): on an exact
+# pHash duplicate the LATER source's copy is dropped. Do not reorder:
+# trashnet > drinking-waste > garbage-detection > alistairking-household > realwaste.
+#
+# Census verification (T1/T2, F18; re-verified 2026-06-10 via authenticated
+# Kaggle metadata/files API and canonical pages):
+#   trashnet               -- archive URL resolves (HTTP 200); MIT per repo.
+#   drinking-waste         -- kaggle metadata OK; license CC0-1.0 confirmed;
+#                             4 classes (AluCan/Glass/HDPEM/PET) per census
+#                             file enumeration; ships YOLO labels (YOLO_imgs/).
+#   garbage-detection      -- kaggle metadata OK; license CC BY 4.0 confirmed
+#                             (also embedded in the dataset's data.yaml, which
+#                             credits Roboflow material-identification/
+#                             garbage-classification-3 v2); data.yaml names
+#                             verified: ['BIODEGRADABLE','CARDBOARD','GLASS',
+#                             'METAL','PAPER','PLASTIC'] -- CLOTH (listed in
+#                             T1 from the 7-class Roboflow lineage) is ABSENT
+#                             from this mirror; its DROP entry is kept as a
+#                             defensive no-op.
+#   alistairking-household -- kaggle metadata OK; license MIT confirmed; all
+#                             30 category folders enumerated via the files
+#                             API (15,000 files, 500/category, default +
+#                             real_world splits of 250 each).
+#   realwaste              -- UCI canonical page confirms CC BY 4.0; direct
+#                             zip URL resolves (HTTP 200); 9 labels per UCI
+#                             page and Kaggle mirror (joebeachcapital/realwaste).
+#
+# realwaste is the TEST-1 leave-one-source-out holdout (T6:
+# eval.leave_out_source in configs/config.yaml). Its registry entry is normal;
+# the split routing happens downstream -- it is ingested but never trained on.
 
 sources:
   - name: trashnet
@@ -50,3 +79,143 @@ sources:
       glass: glass         # 501
       trash: DROP          # 137 -- maps to none of the six target classes (F17)
     drops: [trash]
+
+  - name: drinking-waste
+    fetcher:
+      kind: kaggle
+      ref: arkadiyhacks/drinking-waste-classification
+      # null until the first real fetch -- fill from
+      # data/raw/drinking-waste/.manifest.json after
+      # `python -m yolo_waste_sorter.data.download`.
+      sha256: null
+    license: CC0-1.0
+    attribution: >-
+      Arkadiy Serezhkin, Drinking Waste Classification
+      (kaggle.com/datasets/arkadiyhacks/drinking-waste-classification),
+      4,828 images of drink containers with YOLO boxes, UCL final-year project
+    # Ships its own YOLO labels in YOLO_imgs/ -- no autoboxing needed (T1).
+    annotation_type: det
+    background: clean
+    mapping:
+      AluCan: metal   # 1,060 images (F18)
+      Glass: glass    # 1,232 -- reuses part of TrashNet's glass; dedup catches it (T10)
+      PET: plastic    # 1,508 -- resin codes collapse to plastic (T1)
+      HDPEM: plastic  # 1,028 -- HDPE milk bottles
+    drops: []
+
+  - name: garbage-detection
+    fetcher:
+      kind: kaggle
+      ref: viswaprakash1990/garbage-detection
+      # null until the first real fetch -- fill from
+      # data/raw/garbage-detection/.manifest.json after
+      # `python -m yolo_waste_sorter.data.download`.
+      sha256: null
+    license: CC BY 4.0
+    attribution: >-
+      Viswa Prakash, Garbage Detection - 6 Waste Categories
+      (kaggle.com/datasets/viswaprakash1990/garbage-detection), Kaggle mirror
+      of Roboflow material-identification/garbage-classification-3 v2,
+      10,464 detection images with YOLO boxes
+    annotation_type: det
+    # Roboflow aggregate of unknown provenance, mixed scenes (T2); pHash dedup
+    # against earlier sources is load-bearing here (F20, T10).
+    background: wild
+    mapping:
+      # Exact label spellings from the shipped data.yaml (verified 2026-06-10).
+      PAPER: paper
+      PLASTIC: plastic
+      GLASS: glass
+      METAL: metal
+      CARDBOARD: cardboard
+      BIODEGRADABLE: organic
+      # CLOTH comes from the 7-class Roboflow lineage (T1) but is absent from
+      # this mirror's data.yaml (nc: 6). Kept as a defensive no-op DROP.
+      CLOTH: DROP
+    drops: [CLOTH]
+
+  - name: alistairking-household
+    fetcher:
+      kind: kaggle
+      ref: alistairking/recyclable-and-household-waste-classification
+      # null until the first real fetch -- fill from
+      # data/raw/alistairking-household/.manifest.json after
+      # `python -m yolo_waste_sorter.data.download`.
+      sha256: null
+    license: MIT
+    attribution: >-
+      Alistair King, Recyclable and Household Waste Classification
+      (kaggle.com/datasets/alistairking/recyclable-and-household-waste-classification),
+      15,000 images at 256x256 across 30 categories, studio (default) and
+      real_world splits of 250 images each
+    annotation_type: cls
+    # Studio "default" split is clean single-object; real_world is also
+    # single-object framing (T2).
+    background: clean
+    mapping:
+      # All 30 category folders enumerated via the Kaggle files API
+      # (2026-06-10, 500 images each). Mapping is TOTAL over that list (T1):
+      # obvious material mappings; non-sortable categories -> DROP.
+      aerosol_cans: metal
+      aluminum_food_cans: metal
+      aluminum_soda_cans: metal
+      steel_food_cans: metal
+      cardboard_boxes: cardboard
+      cardboard_packaging: cardboard
+      magazines: paper
+      newspaper: paper
+      office_paper: paper
+      paper_cups: paper
+      glass_beverage_bottles: glass
+      glass_cosmetic_containers: glass
+      glass_food_jars: glass
+      disposable_plastic_cutlery: plastic
+      plastic_cup_lids: plastic
+      plastic_detergent_bottles: plastic
+      plastic_food_containers: plastic
+      plastic_shopping_bags: plastic
+      plastic_soda_bottles: plastic
+      plastic_straws: plastic
+      plastic_trash_bags: plastic
+      plastic_water_bottles: plastic
+      styrofoam_cups: plastic       # polystyrene, resin code 6 -- plastic (T1)
+      styrofoam_food_containers: plastic
+      coffee_grounds: organic
+      eggshells: organic
+      food_waste: organic
+      tea_bags: organic
+      clothing: DROP  # textile -- non-sortable, open-set probe pool (T1/T9)
+      shoes: DROP     # textile/mixed -- non-sortable, open-set probe pool
+    drops: [clothing, shoes]
+
+  - name: realwaste
+    fetcher:
+      kind: http
+      # UCI canonical archive (preferred over the Kaggle mirror
+      # joebeachcapital/realwaste): direct static zip, verified HTTP 200.
+      ref: https://archive.ics.uci.edu/static/public/908/realwaste.zip
+      # null until the first real fetch -- fill from
+      # data/raw/realwaste/.manifest.json after
+      # `python -m yolo_waste_sorter.data.download`.
+      sha256: null
+    license: CC BY 4.0
+    attribution: >-
+      Sam Single, Saeid Iranmanesh, and Raad Raad, RealWaste (UCI Machine
+      Learning Repository, dataset 908), 4,752 images at 524x524 of waste
+      items at the point of landfill reception, 9 material labels
+    annotation_type: cls
+    # Real landfill environment, degraded items, single-item framing (T2).
+    background: wild
+    # TEST-1 holdout: ingested but never trained on; routing handled by
+    # eval.leave_out_source in configs/config.yaml (T6).
+    mapping:
+      Cardboard: cardboard      # 461 images (UCI page)
+      Glass: glass              # 420
+      Metal: metal              # 790
+      Paper: paper              # 500
+      Plastic: plastic          # 921
+      "Food Organics": organic  # 411 -- food/vegetation collapse to organic (T1)
+      Vegetation: organic       # 436
+      "Miscellaneous Trash": DROP # 495 -- none of the six; open-set probe pool
+      "Textile Trash": DROP       # 318
+    drops: ["Miscellaneous Trash", "Textile Trash"]
