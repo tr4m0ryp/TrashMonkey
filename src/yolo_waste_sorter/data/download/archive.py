@@ -6,24 +6,15 @@ member paths are confined to the destination (no zip-slip).
 
 from __future__ import annotations
 
-import hashlib
 import shutil
 import tarfile
 import zipfile
 from pathlib import Path
 
 from yolo_waste_sorter.data.download.errors import DownloadError
+from yolo_waste_sorter.utils.hashing import sha256_file
 
-_CHUNK = 1 << 20
-
-
-def sha256_file(path: Path) -> str:
-    """Hex sha256 of a file, streamed."""
-    digest = hashlib.sha256()
-    with open(path, "rb") as f:
-        while chunk := f.read(_CHUNK):
-            digest.update(chunk)
-    return digest.hexdigest()
+__all__ = ["count_files", "extract_archive", "sha256_file"]
 
 
 def extract_archive(archive: Path, dest: Path) -> int:
