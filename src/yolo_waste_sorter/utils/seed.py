@@ -5,7 +5,7 @@ import random
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 
 def set_seed(seed: int = 42) -> None:
@@ -18,7 +18,7 @@ def set_seed(seed: int = 42) -> None:
     except ImportError:
         pass
     try:
-        import torch
+        import torch  # type: ignore[import-not-found]
 
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
@@ -28,4 +28,7 @@ def set_seed(seed: int = 42) -> None:
 
 def load_config(path: str | Path = "configs/config.yaml") -> dict[str, Any]:
     with open(path) as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+    if not isinstance(config, dict):
+        raise TypeError(f"config root must be a mapping, got {type(config).__name__}")
+    return config
