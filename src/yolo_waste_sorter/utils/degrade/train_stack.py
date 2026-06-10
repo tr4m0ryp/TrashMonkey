@@ -90,7 +90,7 @@ def build_train_stack(cfg: Any) -> list[Any]:
         RuntimeError: the installed albumentations lacks a required transform.
     """
     try:
-        import albumentations  # type: ignore[import-untyped]
+        import albumentations
     except ImportError as exc:
         raise ImportError(_ALBUMENTATIONS_INSTALL_HINT) from exc
 
