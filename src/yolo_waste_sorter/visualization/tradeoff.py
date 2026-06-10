@@ -12,10 +12,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from yolo_waste_sorter.models.thresholding.tuner import MAX_WRONG_BIN
 from yolo_waste_sorter.visualization.loaders import SweepRow, read_sweep_csv
 from yolo_waste_sorter.visualization.style import finalize, setup_style
 
-MAX_WRONG_BIN = 0.02  # hard wrong-bin-rate constraint the tuner selects under
+__all__ = ["MAX_WRONG_BIN", "pareto_front", "plot_threshold_tradeoff"]
 
 
 def pareto_front(rows: tuple[SweepRow, ...]) -> tuple[SweepRow, ...]:

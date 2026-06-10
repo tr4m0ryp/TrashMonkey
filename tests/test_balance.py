@@ -9,22 +9,9 @@ import logging
 from pathlib import Path
 
 import pytest
+from item_helpers import make_items
 
 from yolo_waste_sorter.data.balance import balance_items
-from yolo_waste_sorter.data.dedup import Item
-
-
-def make_items(class_name: str, source: str, n: int) -> list[Item]:
-    return [
-        Item(
-            key=f"{class_name}/{source}__{i:04d}.png",
-            class_name=class_name,
-            source=source,
-            image=Path(f"/fake/{class_name}/{source}__{i:04d}.png"),
-            label=None,
-        )
-        for i in range(n)
-    ]
 
 
 def test_cap_applies_and_never_duplicates() -> None:
