@@ -244,15 +244,84 @@ ranking; only needed if logic starts averaging confidences).
 
 ## Stack & Libraries
 
-<!-- pending -->
+| Component | Choice | Call | License | Health note |
+|---|---|---|---|---|
+| Detection framework | `ultralytics >=8.3,<9` (pinned in pyproject) | Adopt | **AGPL-3.0** -- note in paper; fine for a course project | Mainline, very active |
+| Train-time degradation | `albumentations >=1.0.3` | Adopt | MIT | Auto-engages in ultralytics when installed; custom list via Python API |
+| Auto-boxing | `autodistill` + `autodistill-grounding-dino` | Adopt | Apache-2.0 (incl. weights) | One-off labeling step, not a runtime dep |
+| Bbox fallback | `rembg[birefnet]` (BiRefNet weights) | Compose | MIT | Fires only where DINO returns nothing |
+| Label QA (post-train pass) | `cleanlab` ObjectLab | Compose (optional) | AGPL-3.0 | Ranks worst boxes after first training round |
+| Dedup | perceptual hashing via `imagehash` (pHash) | Adopt | BSD-2 | Exact method confirmed against census overlap findings (T10) |
+| Dataset fetch | `kaggle` CLI + direct URLs; Roboflow Universe export for the human-annotated TrashNet cross-check only | Compose | -- | No Roboflow account dependency in the pipeline |
+| Jetson runtime | JetPack 6.2.2; `ultralytics:latest-jetson-jetpack6` docker; torch 2.10/torchvision 0.25 Jetson wheels if native | Adopt | -- | Engine tied to TRT 10.3.0 + SM 8.7 |
+| Stream ingest | `opencv-python` + threads (turbojpeg optional) | Build (small) | Apache-2.0 | Grab-latest reader is ~50 lines |
+| Experiment tracking | `runs.jsonl` per run + ultralytics run dirs | Build (small) | -- | Per project convention; no external tracker |
+| Dev | pytest, ruff, mypy (already pinned) | Adopt | -- | -- |
+
+Training hardware: Colab GPU via manager notebook; smoke test on local CPU
+first (project convention).
 
 ## Architecture
 
-<!-- pending -->
+```
+data pipeline (CLI, src/yolo_waste_sorter/data/)
+  download --> remap (T1 table) --> autobox (T3: DINO->BiRefNet->centerbox)
+    --> qa (auto checks + review queue) --> dedup (pHash, T10)
+    --> balance (T4 caps) --> split (T6: VAL/TEST-1 instance-grouped, stratified)
+    --> emit YOLO dataset + dataset.yaml + license/attribution table (paper)
+
+training (src/yolo_waste_sorter/models/ + notebooks/manager.ipynb)
+  configs/*.yaml --> train (T7 recipe, T5 augmentation) --> best.pt
+    --> runs.jsonl + per-epoch val curves
+
+evaluation (src/yolo_waste_sorter/models/)
+  best.pt --> VAL / TEST-1 / TEST-2(degraded, shared transform code with T5)
+    --> per-class P/R/mAP + confidence curves --> escalation check (T7 rule)
+
+threshold tuner (src/yolo_waste_sorter/models/)
+  best.pt + degraded VAL + wilderness probe --> consensus simulation
+    --> sweep (tau_frame x K x high-water) --> Pareto knee --> thresholds.yaml
+
+deployment (scripts on the Jetson)
+  best.pt --> on-device export --> best.engine (FP16, 640, batch 1)
+  3x ESP32-CAM MJPEG --> grab-latest threads --> round-robin infer
+    --> per-object vote aggregation (T9 rule, thresholds.yaml)
+    --> control-logic handoff: (class, confidence, timestamp) per decision
+```
+
+Key contracts: the degradation transform module is shared between training
+augmentation (T5), TEST-2 generation (T6), and threshold tuning (T9) so all
+three see the same camera model; `thresholds.yaml` + `best.engine` is the
+complete deployment artifact; every reported number traces to a run config in
+`runs.jsonl` (paper-scribe requirement). The detector-side handoff emits class,
+confidence, and frame timestamp per decision -- the exact contract with the
+control-logic team is an open thread inherited from the vision doc.
 
 ## Decisions Made For You (override in /refine)
 
-<!-- pending -->
+1. **Pinned AdamW recipe over `optimizer='auto'`** -- auto flips optimizer with
+   dataset size (F1). Change if you'd rather track Ultralytics defaults.
+2. **Full fine-tune, no backbone freeze** -- alternative: `freeze=11` trains
+   faster at some accuracy cost. Change if GPU budget gets tight.
+3. **Grounding DINO as primary auto-boxer** -- alternative: BiRefNet-first
+   (lighter, no prompt) or hand-labeling (~2,500 images). Change if you'd
+   rather not depend on a 700MB vision-language model for a one-off step.
+4. **degrees=180 + flipud=0.5** -- assumes truly top-down presentation. Change
+   (degrees~15) if the cameras end up mounted at an angle.
+5. **Three-tier eval with leave-one-source-out** -- costs one whole dataset's
+   training images. Change to a plain stratified split if data turns out
+   scarcer than expected after balancing.
+6. **Multi-frame consensus (0.40/3-votes/0.60 high-water) over a single
+   threshold** -- requires the control loop to track per-object votes. Change
+   to a single conf=0.55 gate if control logic must stay single-frame.
+7. **JetPack 6.2.2 + docker runtime** -- native install is the alternative if
+   docker overhead annoys on the 8GB board.
+8. **FP16, no INT8** -- INT8 saves ~1 ms but needs on-device calibration and
+   hits a TRT 10.3 export bug. Change only if power/thermals demand it.
+9. **Colab + manager notebook for training** -- per your ESPResso-V2
+   convention. Change if a local/remote GPU box materializes.
+10. **`cache='disk'`, `batch=16` fixed** -- reproducibility over per-machine
+    speed auto-tuning.
 
 ## Key Findings
 
