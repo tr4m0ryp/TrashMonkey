@@ -522,12 +522,96 @@ the T4 balancing math.
 
 ## Discarded Approaches
 
-<!-- pending -->
+- **Own data collection / own-board val split** -- rejected at vision level (C4).
+- **Trained 7th "other" class** -- rejected at vision level (C3); the rest rule
+  is control logic. Research adds: the census drop list (unmappable categories)
+  becomes the wilderness probe set for threshold tuning instead -- the rejects
+  are repurposed, not trained on.
+- **YOLO26** -- rejected at vision level (C1); also our `<9` pin predates its
+  trainer changes (MuSGD), so recipes here are verified against 8.3.x.
+- **Classical CV auto-boxing (Otsu/GrabCut/edges) as primary** -- documented
+  white-on-white failures on ~24% of the closest dataset (F15).
+- **rembg/U2-Net as primary boxer** -- same white-on-white failure mode (F15).
+- **YOLO-World / Grounding DINO 1.5 / Roboflow Auto Label** -- GPL-3.0 /
+  closed weights / paid lock-in respectively (T3).
+- **Single high confidence threshold as the rest rule** -- leaks 71-81% of
+  unknowns at matched recall; dominated by consensus (F13, F14).
+- **Energy-score OOD detection** -- needs pre-sigmoid logits; invasive on a
+  TensorRT pipeline; deferred, not needed at this difficulty.
+- **DeepStream / Triton / GStreamer runtime** -- nothing to optimize at
+  3 streams x 8 fps with a 5 ms model (T8).
+- **INT8 export as default** -- ~1 ms saved against a ~1 s budget; calibration
+  burden + TRT 10.3 bug (T8).
+- **JetPack 7.x** -- ecosystem not caught up for Orin Nano mid-2026 (T8).
+- **Mixup/cutmix augmentation; raised hue jitter** -- material-cue destruction,
+  nano-scale harm evidence (T5).
 
 ## Risks & Open Threads
 
-<!-- pending -->
+- [ ] **T1/T2/T4/T10 pending dataset census** (agent running) -- label-mapping
+  table, source shortlist, per-class targets, dedup/license table. Blocks
+  /readyforlaunch for the data-pipeline tasks only.
+- [ ] **Organic-class thinness** -- the weakest class in public sets; census
+  will quantify extractable counts; remedy options land in T4.
+- [ ] **White-paper-on-white bbox QA burden** -- fallback chain fires most on
+  the paper class; the 10% review oversamples it; if review fails the
+  acceptance bar, escalate that subset to manual boxes (bounded: ~600 images).
+- [ ] **Demo-day lighting drift vs white-background bet** -- vision-level risk;
+  monitored at integration, mitigated by hsv_v/PlanckianJitter augmentation
+  and the TEST-2 severity curve (worst-severity numbers = early warning).
+- [ ] **Control-logic handoff contract** -- detector emits (class, confidence,
+  timestamp) per decision; exact format/transport with the control team still
+  open (inherited from vision doc; not a training question).
+- [ ] **WiFi jitter worst case (~0.5 s)** -- eats consensus frames; mitigated
+  by dedicated AP; if it persists, drop K from 3 to 2 at a slightly higher
+  tau_frame (re-sweep).
+- [x] Mosaic vs single-object deployment tension -- resolved: keep mosaic,
+  close_mosaic=10 (T5).
+- [x] Per-class vs global threshold -- resolved: criterion-based switch (T9).
+- [x] yolo11n capacity worry -- resolved: published clean-coarse results +
+  escalation rule (F5, T7).
 
 ## Build Plan
 
-<!-- pending -->
+Phases ordered by dependency; P2-P4 parallelize after P1. Built for
+/readyforlaunch task decomposition. All logic in `src/yolo_waste_sorter/`;
+notebooks orchestrate only (project convention).
+
+**P1 -- Data pipeline core** (blocked on census: T1 mapping, T2 shortlist)
+- `data/download.py`: fetchers per source (kaggle CLI, direct), checksums,
+  into `data/raw/` (never mutated).
+- `data/remap.py`: T1 label-mapping table as data (YAML), drop-list handling;
+  drops routed to `data/interim/wilderness/` for the T9 probe set.
+- `data/autobox.py`: DINO -> BiRefNet -> centerbox chain (T3), writes YOLO
+  labels + provenance.
+- `data/qa.py`: automated checks, review queue emission, IoU cross-check
+  against the human-annotated TrashNet.
+- `data/dedup.py` + `data/balance.py` + `data/split.py`: pHash dedup (T10),
+  caps (T4), instance-grouped stratified splits (T6), final `dataset.yaml` +
+  attribution table for the paper.
+- Wire `make repro` to run the chain end to end, seeded.
+
+**P2 -- Training** (needs P1 output format only; recipe is fixed)
+- `models/train.py`: T7 recipe from `configs/`, T5 Albumentations stack,
+  runs.jsonl logging, smoke-test mode.
+- `notebooks/manager.ipynb`: Colab orchestrator per CLAUDE.md convention
+  (preflight, cache, smoke, resume, canary, train, eval, plots).
+- `utils/degrade.py`: the shared ESP32 degradation transforms (T5/T6/T9).
+
+**P3 -- Evaluation + threshold tuning** (needs P2 artifacts)
+- `models/evaluate.py`: three-tier eval, per-class curves, escalation check.
+- `models/tune_thresholds.py`: consensus simulation over VAL+wilderness,
+  sweep, Pareto knee, emit `thresholds.yaml`.
+- `visualization/`: per-class PR/confidence plots, TEST-2 severity curves ->
+  `reports/figures/`.
+
+**P4 -- Deployment** (needs best.pt; Jetson-side, independent of P3 tuning
+until thresholds.yaml lands)
+- Jetson setup script (JetPack 6.2.2 checks, power mode, docker pull).
+- On-device export script + engine smoke test.
+- `deploy/runtime.py`: stream readers, round-robin loop, vote aggregator,
+  control-logic emit. Bench end-to-end latency against the F11 budget.
+
+**P5 -- Paper integration** (continuous; scribe is active)
+- Label-mapping + license tables (P1 outputs), recipe + results tables
+  (P2/P3), deployment numbers (P4), limitations (proxy-eval caveat, F10).
