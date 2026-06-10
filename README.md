@@ -1,5 +1,6 @@
 # yolo-waste-sorter
 
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 [![Ultralytics YOLO11](https://img.shields.io/badge/ultralytics-%E2%89%A58.3.226-111f68.svg)](https://docs.ultralytics.com/models/yolo11/)
 [![TensorRT FP16](https://img.shields.io/badge/deploy-TensorRT%20FP16%20%C2%B7%20Jetson%20Orin%20Nano-76b900.svg)](src/yolo_waste_sorter/deploy/)
