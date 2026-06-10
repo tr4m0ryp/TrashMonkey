@@ -107,3 +107,16 @@ thresholds:
     tau_frame: [0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
     min_votes: [2, 3, 4, 5]
     high_water: [0.5, 0.6, 0.7]
+
+# T8 Jetson runtime. Camera URLs are the three ESP32-CAM MJPEG streams
+# (placeholder IPs -- set the real ones at install time); the engine is
+# exported ON the Jetson (R5: TensorRT engines are device-bound).
+deploy:
+  cameras:
+    - http://192.168.4.11:81/stream
+    - http://192.168.4.12:81/stream
+    - http://192.168.4.13:81/stream
+  window_seconds: 1.5
+  engine: models/best.engine
+  reconnect_backoff_s: 2.0
+  stale_after_s: 1.0
