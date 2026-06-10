@@ -75,8 +75,13 @@ def test_augment_esp32_stack(config: Config) -> None:
 
 
 def test_eval_section(config: Config) -> None:
+<<<<<<< HEAD
     assert config.eval.val_fraction is None
     # T6: TEST-1 leave-one-source-out holdout picked by the census (T2).
+=======
+    # T6 post-census values: RealWaste is the leave-one-source-out TEST-1 source.
+    assert config.eval.val_fraction == 0.15
+>>>>>>> agent/agent-a567186ef69b3c2ef
     assert config.eval.leave_out_source == "realwaste"
     assert config.eval.test2_severities == (1, 2, 3, 4, 5)
 
