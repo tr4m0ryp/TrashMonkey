@@ -74,7 +74,7 @@ EmitFn = Callable[[DecisionEvent], None]
 
 @dataclass
 class _Session:
-    """Votes for the single object currently in one camera's scan zone."""
+    """Votes for the single object currently in one stream's view."""
 
     started: float  # monotonic open time
     votes: list[Vote] = field(default_factory=list)
