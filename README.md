@@ -220,7 +220,7 @@ byte-identical `thresholds.yaml` and `sweep.csv`.
 ## Roadmap
 
 - First full GPU training run and the three-tier numbers it produces (the
-  pipeline, eval, tuner, and runtime are built and smoke-tested end to end).
+  pipeline, eval, tuner, and export are built and smoke-tested end to end).
 - Threshold sweep on real degraded frames + open-set probes; freeze
   `thresholds.yaml`.
 - Latency benchmarks of exported artifacts on reference edge hardware.
