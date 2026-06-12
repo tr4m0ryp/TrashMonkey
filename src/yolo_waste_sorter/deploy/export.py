@@ -159,10 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(f"artifact: {artifact}")
     print(f"format:   {args.fmt} (imgsz {cfg.train.imgsz}, batch 1)")
-    print(
-        "next:     point deploy.model at the artifact, place thresholds.yaml "
-        "beside it, and run python -m yolo_waste_sorter.deploy"
-    )
+    print("next:     ship the artifact together with thresholds.yaml to your integration")
     return 0
 
 
