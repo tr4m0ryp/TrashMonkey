@@ -1,8 +1,8 @@
-"""Grab-latest MJPEG camera readers (T8).
+"""Grab-latest MJPEG camera readers.
 
-One daemon thread per ESP32-CAM stream runs a continuous grab/retrieve loop
+One daemon thread per camera stream runs a continuous grab/retrieve loop
 and keeps ONLY the newest frame under a lock -- ``CAP_PROP_BUFFERSIZE`` is
-unreliable on HTTP MJPEG (T8/F11), so freshness is enforced in software.
+unreliable on HTTP MJPEG, so freshness is enforced in software.
 Every frame is stamped with its monotonic receive time; consumers treat a
 frame older than ``stale_after_s`` as stale. A dead stream is closed, the
 thread sleeps ``reconnect_backoff_s``, then reopens (reconnects are counted).

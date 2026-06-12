@@ -52,6 +52,7 @@ def train(
     *,
     runs_jsonl: Path | None = None,
     project: Path | None = None,
+    resume: Path | None = None,
     now: datetime | None = None,
 ) -> RunResult:
     """Run the T7 fine-tune and append one record to runs.jsonl.
@@ -62,12 +63,22 @@ def train(
         smoke: Tiny CPU run through the full cycle (also via SMOKE_TEST=1).
         runs_jsonl: Experiment log path (default experiments/runs.jsonl).
         project: Run-directory parent (default experiments/runs; tmp in smoke).
+        resume: last.pt of an interrupted run to continue (epoch, optimizer,
+            and EMA state restored by ultralytics; the augmentation stack is
+            re-supplied since transforms are not serialized in checkpoints).
+            Use ``find_resumable()`` to locate one -- resuming a *finished*
+            run raises inside ultralytics.
         now: Injected timestamp for the run record (default: UTC now).
     """
     smoke = smoke or smoke_requested()
     validate_train_config(cfg)
     if data_yaml is None and not smoke:
         raise ValueError("data_yaml is required outside smoke mode")
+    if resume is not None:
+        if smoke:
+            raise ValueError("resume is incompatible with smoke mode (throwaway tmp runs)")
+        if not resume.is_file():
+            raise FileNotFoundError(f"resume checkpoint missing: {resume}")
 
     smoke_root: Path | None = None
     if smoke:
