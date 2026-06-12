@@ -26,6 +26,16 @@ credentials*.json
 notes/
 tasks/
 .claude/
+.playwright-mcp/
+CLAUDE.md
+
+# Preproduction material (paper, research docs, report assets) -- local only
+research/
+references/
+reports/
+*.tex
+*.sty
+*.bib
 
 # Research data & artifacts (keep structure, ignore contents)
 data/raw/*
