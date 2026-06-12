@@ -9,7 +9,6 @@ from yolo_waste_sorter.utils.config.schema import (
     AugmentConfig,
     Config,
     DefocusConfig,
-    DeployConfig,
     DownscaleConfig,
     Esp32StackConfig,
     EvalConfig,
