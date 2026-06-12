@@ -38,7 +38,7 @@ from yolo_waste_sorter.utils.config import Config
 
 REST_LABEL = "rest"  # wire form of the REST sentinel in emitted decisions
 
-# Detector seam: frame -> detections as (class_id, score). The engine-backed
+# Detector seam: frame -> detections as (class_id, score). The model-backed
 # predictor and the test fake both satisfy this.
 PredictFn = Callable[[Frame], list[Vote]]
 
