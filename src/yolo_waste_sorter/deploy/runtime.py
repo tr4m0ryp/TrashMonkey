@@ -49,7 +49,7 @@ class DeployError(Exception):
 
 @dataclass(frozen=True)
 class DecisionEvent:
-    """One per-object decision handed to control logic (T8 contract)."""
+    """One per-object decision handed to downstream consumers."""
 
     camera: str
     decision: str  # trained class name, or REST_LABEL
