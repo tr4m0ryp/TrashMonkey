@@ -1,0 +1,8 @@
+warning: paper.bbl:145: Underfull \hbox (badness 10000) in paragraph at lines 142--145
+warning: paper.bbl:190: Underfull \hbox (badness 10000) in paragraph at lines 187--190
+warning: internal consistency problem when checking if paper.bbl changed
+warning: TeX rerun seems needed, but stopping at 6 passes
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `paper.pdf` (54.52 KiB)
+note: Skipped writing 3 intermediate files (use --keep-intermediates to keep them)
