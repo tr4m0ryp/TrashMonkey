@@ -80,13 +80,19 @@ class _Session:
     votes: list[Vote] = field(default_factory=list)
 
 
-def load_engine_predictor(engine: Path, *, conf_floor: float) -> PredictFn:
-    """TensorRT-engine predictor via lazy ultralytics import (Jetson only)."""
-    if not engine.is_file():
-        raise DeployError(f"engine artifact not found: {engine} (export on the Jetson, R5)")
+def load_model_predictor(model_path: Path, *, conf_floor: float) -> PredictFn:
+    """Predictor over any Ultralytics-loadable artifact (.pt/.onnx/.engine/...).
+
+    ultralytics is imported lazily -- it only exists in the deployment image,
+    never in the dev/test environment.
+    """
+    if not model_path.exists():
+        raise DeployError(
+            f"model artifact not found: {model_path} (run deploy.export first)"
+        )
     from ultralytics import YOLO
 
-    model = YOLO(str(engine), task="detect")
+    model = YOLO(str(model_path), task="detect")
 
     def predict(frame: Frame) -> list[Vote]:
         result = model.predict(frame, conf=conf_floor, verbose=False)[0]
