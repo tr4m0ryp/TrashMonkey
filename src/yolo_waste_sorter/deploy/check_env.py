@@ -1,6 +1,8 @@
-"""Read-only Jetson environment check (T8): L4T, power mode, camera streams.
+"""Optional read-only environment check for NVIDIA Jetson targets.
 
-NEVER changes system state -- it prints the exact remediation commands
+Only relevant when deploying to a Jetson-class device (L4T, power mode,
+camera streams); other deployment targets skip this entirely. NEVER changes
+system state -- it prints the exact remediation commands
 (``sudo nvpmodel -m 2``; ``sudo jetson_clocks``) instead of running them.
 Exits nonzero with a summary table when any check fails.
 
