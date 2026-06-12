@@ -147,7 +147,7 @@ class Runtime:
         if not 0 <= decision < len(self.classes):
             raise DeployError(
                 f"consensus produced class id {decision} outside the "
-                f"{len(self.classes)}-class map -- engine/config mismatch"
+                f"{len(self.classes)}-class map -- model/config mismatch"
             )
         confidence = max(score for class_id, score in votes if class_id == decision)
         return self.classes[decision], confidence
