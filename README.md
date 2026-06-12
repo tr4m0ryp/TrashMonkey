@@ -168,7 +168,7 @@ python -m yolo_waste_sorter.models.thresholds           # sweep -> thresholds.ya
 </details>
 
 <details>
-<summary>Deployment</summary>
+<summary>Export</summary>
 
 Export trained weights to any supported Ultralytics format -- ONNX is the
 portable default; TensorRT (`--format engine`) targets NVIDIA edge devices
@@ -181,21 +181,10 @@ python -m yolo_waste_sorter.deploy.export --weights models/best.pt              
 python -m yolo_waste_sorter.deploy.export --weights models/best.pt --format engine  # TensorRT FP16
 ```
 
-Point `deploy.model` in `configs/config.yaml` at the exported artifact,
-place `thresholds.yaml` beside it, configure the MJPEG stream URLs (any
-count), and run the stream runtime:
-
-```bash
-python -m yolo_waste_sorter.deploy        # N MJPEG streams -> consensus -> JSON decisions
-```
-
-For NVIDIA Jetson targets there is an optional read-only environment check
-(L4T version, power mode, stream reachability -- prints remediations,
-never changes state):
-
-```bash
-python -m yolo_waste_sorter.deploy.check_env
-```
+Every export is smoke-tested with a dummy inference before the artifact is
+trusted. The exported model and `thresholds.yaml` together are everything a
+downstream system needs; camera capture and decision plumbing are not part
+of this repository.
 </details>
 
 ## Technical Details
