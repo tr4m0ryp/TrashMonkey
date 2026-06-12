@@ -1,17 +1,19 @@
-# trash-monkey
+# TrashMonkey
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tr4m0ryp/trash-monkey/blob/main/notebooks/manager.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tr4m0ryp/TrashMonkey/blob/main/notebooks/manager.ipynb)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Model](https://img.shields.io/badge/model-YOLO11n-orange.svg)
 ![Seed](https://img.shields.io/badge/seed-42-green.svg)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
 Trains a small, fast vision model (YOLO11n) to recognize six kinds of waste
-in a photo. When it isn't sure, it says **"rest"** instead of guessing --
-better no answer than a wrong one.
+in a photo.
 
 | plastic | paper | cardboard | metal | glass | organic |
 |:-:|:-:|:-:|:-:|:-:|:-:|
+
+When it isn't sure, it says **"rest"** instead of guessing -- better no
+answer than a wrong one.
 
 Everything is built from **free public datasets** -- no private photos --
 and the finished model can run on cheap hardware. Training images show items
@@ -44,7 +46,7 @@ minute.
 <summary>Terminal commands (without the notebook)</summary>
 
 ```bash
-git clone https://github.com/tr4m0ryp/trash-monkey.git && cd trash-monkey
+git clone https://github.com/tr4m0ryp/TrashMonkey.git && cd TrashMonkey
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
@@ -115,9 +117,10 @@ imaging (the robustness number).
 
 ## Results
 
-Training has not run yet -- the pipeline is built and tested end to end, and
-this table fills in as runs finish. Every number will be tied to a run
-config and seed in `experiments/runs.jsonl`.
+The first full training run is **in progress right now** -- the pipeline is
+built and tested end to end, and this table fills in as the run finishes.
+Every number will be tied to a run config and seed in
+`experiments/runs.jsonl`.
 
 | Tier | What it measures | mAP50 | mAP50-95 |
 |---|---|---|---|
