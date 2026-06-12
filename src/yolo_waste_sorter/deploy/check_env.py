@@ -36,7 +36,7 @@ def check_l4t(release_path: Path = NV_TEGRA_RELEASE) -> CheckResult:
             name="l4t",
             ok=False,
             detail=f"{release_path} missing -- not a Jetson (or L4T not installed)",
-            remediation="flash JetPack 6.2.2 (L4T 36.5.0) per T8",
+            remediation="flash JetPack 6.x (e.g. 6.2.2 / L4T 36.5.0)",
         )
     first_line = release_path.read_text(encoding="utf-8").splitlines()[0].strip()
     return CheckResult(name="l4t", ok=True, detail=first_line)
