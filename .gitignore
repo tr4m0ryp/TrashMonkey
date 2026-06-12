@@ -47,8 +47,6 @@ models/*
 !models/.gitkeep
 experiments/*
 !experiments/.gitkeep
-reports/figures/*
-!reports/figures/.gitkeep
 wandb/
 mlruns/
 runs/
