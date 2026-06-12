@@ -108,7 +108,7 @@ def load_model_predictor(model_path: Path, *, conf_floor: float) -> PredictFn:
 
 
 class Runtime:
-    """Round-robin inference loop over grab-latest readers (T8)."""
+    """Round-robin inference loop over grab-latest readers."""
 
     def __init__(
         self,
