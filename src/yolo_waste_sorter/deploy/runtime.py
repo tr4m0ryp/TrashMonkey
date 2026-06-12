@@ -223,16 +223,16 @@ def build_runtime(
 ) -> Runtime:
     """Wire the runtime from config: thresholds artifact, readers, predictor.
 
-    ``predict`` defaults to the TensorRT engine at ``cfg.deploy.engine`` (a
-    Jetson-only path); tests and off-Jetson runs inject a callable instead.
+    ``predict`` defaults to the exported model at ``cfg.deploy.model``;
+    tests and dev-machine runs inject a callable instead.
     """
     artifact = (
-        cfg.deploy.engine.parent / THRESHOLDS_FILENAME if thresholds_path is None
+        cfg.deploy.model.parent / THRESHOLDS_FILENAME if thresholds_path is None
         else thresholds_path
     )
     params = load_threshold_params(artifact)
     if predict is None:
-        predict = load_engine_predictor(cfg.deploy.engine, conf_floor=params.conf_floor)
+        predict = load_model_predictor(cfg.deploy.model, conf_floor=params.conf_floor)
     readers = start_readers(
         cfg.deploy.cameras,
         stale_after_s=cfg.deploy.stale_after_s,
