@@ -1,0 +1,10 @@
+.venv/bin/ruff check src tests
+All checks passed!
+.venv/bin/mypy src
+Success: no issues found in 97 source files
+tests/test_smoke.py ...                                                  [ 82%]
+tests/test_split.py .........                                            [ 85%]
+tests/test_thresholds.py ................                                [ 91%]
+tests/test_train.py ......................                               [100%]
+
+============================= 271 passed in 11.26s =============================
