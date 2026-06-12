@@ -1,5 +1,0 @@
-pyproject.toml:2:name = "yolo-waste-sorter"
-src/yolo_waste_sorter/utils/degrade/train_stack.py:19:    "(it is a declared dependency of yolo-waste-sorter -- a project install pulls it in)."
-src/yolo_waste_sorter/data/pipeline/stages/autobox.py:161:            "install the boxing extra (pip install 'yolo-waste-sorter[boxing]') for the "
-src/yolo_waste_sorter/data/download/fetchers.py:81:    request = urllib.request.Request(spec.ref, headers={"User-Agent": "yolo-waste-sorter/0.1"})
-src/yolo_waste_sorter/data/autobox/types.py:41:    "Install the 'boxing' extra: pip install 'yolo-waste-sorter[boxing]'. "
