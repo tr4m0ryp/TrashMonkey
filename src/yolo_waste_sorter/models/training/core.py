@@ -138,6 +138,7 @@ def train(
         run_dir=run_dir,
         best_pt=best_pt,
         smoke=smoke,
+        resumed_from=resume,
         now=now,
     )
     append_run_record(record, runs_jsonl if runs_jsonl is not None else DEFAULT_RUNS_JSONL)
