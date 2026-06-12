@@ -121,6 +121,6 @@ deploy:
   cameras:
     - http://127.0.0.1:81/stream
   window_seconds: 1.5
-  engine: models/best.engine
+  model: models/best.onnx
   reconnect_backoff_s: 2.0
   stale_after_s: 1.0
