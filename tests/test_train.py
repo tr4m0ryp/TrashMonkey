@@ -99,6 +99,7 @@ def _run(
     tmp_path: Path,
     data_yaml: Path | None = None,
     smoke: bool = False,
+    resume: Path | None = None,
     now: datetime | None = None,
 ) -> Any:
     if data_yaml is None and not smoke:
@@ -110,6 +111,7 @@ def _run(
         smoke=smoke,
         runs_jsonl=tmp_path / "runs.jsonl",
         project=tmp_path / "runs",
+        resume=resume,
         now=now or datetime(2026, 6, 10, 12, 0, 0, tzinfo=timezone.utc),
     )
 
