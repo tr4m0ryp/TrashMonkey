@@ -201,7 +201,7 @@ of this repository.
 | `src/yolo_waste_sorter/models/training/` | seeded fine-tune, smoke mode, run logging to `experiments/runs.jsonl` |
 | `src/yolo_waste_sorter/models/evaluation/` | three-tier eval, severity curves, report artifact |
 | `src/yolo_waste_sorter/models/thresholding/` | consensus rule, simulation, sweep, `thresholds.yaml` writer |
-| `src/yolo_waste_sorter/deploy/` | multi-format export, MJPEG stream runtime, optional Jetson env check |
+| `src/yolo_waste_sorter/deploy/` | multi-format model export + `thresholds.yaml` reader (artifacts only, no device I/O) |
 | `src/yolo_waste_sorter/smoke/` | offline end-to-end harness (`FAKE_MODEL=1` supported) |
 | `paper.tex` + `refs.bib` | technical report (NeurIPS template); `make paper` builds via tectonic |
 
