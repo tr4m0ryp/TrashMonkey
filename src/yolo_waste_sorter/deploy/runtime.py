@@ -1,18 +1,18 @@
-"""Jetson inference runtime: round-robin streams -> votes -> consensus (T8/T9).
+"""Edge inference runtime: round-robin streams -> votes -> consensus.
 
 One loop round-robins the grab-latest camera readers, runs the detector on
-each fresh frame at the permissive ``conf_floor``, and accumulates per-camera
-object sessions: the belt presents a single object in the scan zone at a time
-(T9/F14), so frame-to-object association needs no tracker -- a session opens
-on the first qualified-floor detection and CLOSES ``window_seconds`` after it
+each fresh frame at the permissive ``conf_floor``, and accumulates per-stream
+object sessions: the runtime assumes a single object in view per stream at a
+time, so frame-to-object association needs no tracker -- a session opens on
+the first qualified-floor detection and CLOSES ``window_seconds`` after it
 started. On close the votes go through the SHARED ``consensus_decision``
 (imported from the thresholding package, never reimplemented), and the
 decision is emitted as one JSON line on stdout AND through the pluggable
-``emit`` callback -- the transport seam for the control-logic team.
+``emit`` callback -- the integration seam for downstream consumers.
 
 The emitted ``decision`` field is a trained class name or the literal string
-``"rest"`` -- the REST sentinel's wire form. "rest" is NOT a trained class
-(vision C3); it exists only as the consensus rejection outcome.
+``"rest"`` -- the REST sentinel's wire form. "rest" is NOT a trained class;
+it exists only as the consensus rejection outcome.
 """
 
 from __future__ import annotations
