@@ -58,5 +58,4 @@ the TensorRT engine must be exported on the device itself.
 
 Hyperparameters and the label map live in `configs/`; all logic in
 `src/yolo_waste_sorter/` (data pipeline, training, evaluation, thresholding,
-deploy); notebooks only orchestrate. The design rationale with full citations
-is in `research/yolo11-waste-detection-finetune.md`.
+deploy); notebooks only orchestrate.
