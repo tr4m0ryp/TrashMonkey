@@ -103,8 +103,14 @@ def train(
     kwargs["project"] = str(project)
     kwargs["name"] = cfg.experiment.name + ("-smoke" if smoke else "")
     kwargs["augmentations"] = build_train_stack(cfg)
+    if resume is not None:
+        # check_resume restores every arg from the checkpoint (run dir included)
+        # and honors only the re-supplied augmentations stack plus a few
+        # memory/device knobs; the rest of kwargs serves as the fallback when
+        # the checkpoint's stored data path no longer exists on a fresh VM.
+        kwargs["resume"] = str(resume)
 
-    model = ultralytics.YOLO(cfg.model.base)
+    model = ultralytics.YOLO(str(resume) if resume is not None else cfg.model.base)
     start = time.perf_counter()
     results = model.train(**kwargs)
     wall_clock_seconds = time.perf_counter() - start

@@ -15,8 +15,8 @@ import threading
 import time
 from typing import Any
 
-# FFmpeg's default 5 MB stream probe stalls for tens of seconds at ESP32-CAM
-# bitrates (~27 KB/frame at 8 fps, F7) on EVERY open/reconnect; cap it before
+# FFmpeg's default 5 MB stream probe stalls for tens of seconds at low-cost
+# IP-camera bitrates (tens of KB/frame) on EVERY open/reconnect; cap it before
 # cv2 opens the capture. ``timeout`` (microseconds) bounds socket reads so a
 # dead-but-open TCP stream fails grab() and enters the reconnect path instead
 # of hanging forever. setdefault keeps any operator override authoritative.
