@@ -48,7 +48,6 @@ pip install -e ".[dev,research]"
 make test            # unit + integration suite
 FAKE_MODEL=1 make smoke   # full pipeline -> train -> eval -> thresholds on synthetic data
 make repro           # real data pipeline (downloads public datasets)
-make paper           # build the technical report (tectonic)
 ```
 
 GPU training runs through `notebooks/manager.ipynb` (Colab-ready, run-all
