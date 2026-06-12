@@ -259,6 +259,7 @@ def test_runs_jsonl_appends_one_valid_line(
     assert len(record["dataset_yaml_sha256"]) == 64
     assert record["escalation"]["passed"] is True
     assert record["smoke"] is False
+    assert record["resumed_from"] is None
     assert isinstance(record["wall_clock_seconds"], float)
     # the stack is serialized as reprs, not objects
     assert all(isinstance(t, str) for t in record["train_kwargs"]["augmentations"])
