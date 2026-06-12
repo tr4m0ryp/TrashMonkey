@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from yolo_waste_sorter.deploy import (
+from trashmonkey.deploy import (
     SUPPORTED_FORMATS,
     ExportError,
     ensure_jetson_arch,

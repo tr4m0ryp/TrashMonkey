@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from yolo_waste_sorter.data.dedup import (
+from trashmonkey.data.dedup import (
     DedupError,
     Item,
     dedup_items,

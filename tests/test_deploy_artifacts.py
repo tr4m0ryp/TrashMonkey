@@ -9,10 +9,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-from yolo_waste_sorter.deploy import load_threshold_params
-from yolo_waste_sorter.models.thresholding import write_thresholds_yaml
-from yolo_waste_sorter.models.thresholding.tuner import SweepCell
-from yolo_waste_sorter.models.thresholds import ThresholdError
+from trashmonkey.deploy import load_threshold_params
+from trashmonkey.models.thresholding import write_thresholds_yaml
+from trashmonkey.models.thresholding.tuner import SweepCell
+from trashmonkey.models.thresholds import ThresholdError
 
 
 def test_thresholds_roundtrip_with_real_writer(tmp_path: Path) -> None:

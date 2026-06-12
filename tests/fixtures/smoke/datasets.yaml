@@ -3,7 +3,7 @@
 # dataset content. `ref` paths are repo-root-relative; the smoke harness
 # resolves them to absolute paths when materializing the workdir registry.
 # Regenerate the archives with:
-#   PYTHONPATH=src python -m yolo_waste_sorter.smoke --regen-fixtures
+#   PYTHONPATH=src python -m trashmonkey.smoke --regen-fixtures
 sources:
   - name: alpha
     fetcher:

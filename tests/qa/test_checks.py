@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from helpers import BoxTuple, aspect_box, check_many, check_one, prov, square, write_labels
 
-from yolo_waste_sorter.data.qa import (
+from trashmonkey.data.qa import (
     FLAG_AREA_EXTREME,
     FLAG_AREA_ZSCORE,
     FLAG_ASPECT_ZSCORE,

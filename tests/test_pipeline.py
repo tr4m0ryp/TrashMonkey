@@ -16,8 +16,8 @@ import pytest
 import yaml
 from PIL import Image
 
-from yolo_waste_sorter.data.autobox import Detection
-from yolo_waste_sorter.data.pipeline import (
+from trashmonkey.data.autobox import Detection
+from trashmonkey.data.pipeline import (
     PipelineContext,
     PipelineHalt,
     Stage,
@@ -27,8 +27,8 @@ from yolo_waste_sorter.data.pipeline import (
     main,
     run_pipeline,
 )
-from yolo_waste_sorter.data.pipeline.stages.qa import _draw_sample
-from yolo_waste_sorter.data.qa import ImageQA, QAReport
+from trashmonkey.data.pipeline.stages.qa import _draw_sample
+from trashmonkey.data.qa import ImageQA, QAReport
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -327,5 +327,5 @@ def test_cli_reports_config_error(tmp_path: Path) -> None:
 
 def test_make_repro_invokes_pipeline_cli() -> None:
     recipe = (REPO_ROOT / "Makefile").read_text().split("repro:")[1]
-    assert "-m yolo_waste_sorter.data.pipeline run" in recipe
+    assert "-m trashmonkey.data.pipeline run" in recipe
     assert "TODO" not in recipe

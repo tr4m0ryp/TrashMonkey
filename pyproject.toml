@@ -1,7 +1,7 @@
 [project]
-name = "yolo-waste-sorter"
+name = "trashmonkey"
 version = "0.1.0"
-description = "Fine-tune YOLO11n for six-class waste detection (plastic, paper, cardboard, metal, glass, organic) on white background, deployed via TensorRT on Jetson Orin Nano"
+description = "TrashMonkey: fine-tune YOLO11n for six-class waste detection (plastic, paper, cardboard, metal, glass, organic) from public datasets, with open-set rest rejection and multi-format export"
 license = { text = "AGPL-3.0-or-later" }
 requires-python = ">=3.11"
 dependencies = [

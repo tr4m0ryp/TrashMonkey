@@ -1,5 +1,5 @@
 # Source registry for the dataset download stage.
-# Loaded + validated by src/yolo_waste_sorter/data/download/registry.py.
+# Loaded + validated by src/trashmonkey/data/download/registry.py.
 # Unknown keys fail fast with the offending key named in the error.
 #
 # Schema, per entry under `sources` (exact shape other tasks depend on):
@@ -85,7 +85,7 @@ sources:
       ref: arkadiyhacks/drinking-waste-classification
       # null until the first real fetch -- fill from
       # data/raw/drinking-waste/.manifest.json after
-      # `python -m yolo_waste_sorter.data.download`.
+      # `python -m trashmonkey.data.download`.
       sha256: null
     license: CC0-1.0
     attribution: >-
@@ -108,7 +108,7 @@ sources:
       ref: viswaprakash1990/garbage-detection
       # null until the first real fetch -- fill from
       # data/raw/garbage-detection/.manifest.json after
-      # `python -m yolo_waste_sorter.data.download`.
+      # `python -m trashmonkey.data.download`.
       sha256: null
     license: CC BY 4.0
     attribution: >-
@@ -139,7 +139,7 @@ sources:
       ref: alistairking/recyclable-and-household-waste-classification
       # null until the first real fetch -- fill from
       # data/raw/alistairking-household/.manifest.json after
-      # `python -m yolo_waste_sorter.data.download`.
+      # `python -m trashmonkey.data.download`.
       sha256: null
     license: MIT
     attribution: >-
@@ -195,7 +195,7 @@ sources:
       ref: https://archive.ics.uci.edu/static/public/908/realwaste.zip
       # null until the first real fetch -- fill from
       # data/raw/realwaste/.manifest.json after
-      # `python -m yolo_waste_sorter.data.download`.
+      # `python -m trashmonkey.data.download`.
       sha256: null
     license: CC BY 4.0
     attribution: >-

@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from yolo_waste_sorter.data.download import (
+from trashmonkey.data.download import (
     MANIFEST_NAME,
     ChecksumMismatchError,
     DatasetConfigError,
@@ -25,8 +25,8 @@ from yolo_waste_sorter.data.download import (
     load_registry,
     parse_source,
 )
-from yolo_waste_sorter.data.download.archive import sha256_file
-from yolo_waste_sorter.data.download.fetchers import fetch
+from trashmonkey.data.download.archive import sha256_file
+from trashmonkey.data.download.fetchers import fetch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TARGET_CLASSES = ["plastic", "paper", "cardboard", "metal", "glass", "organic"]

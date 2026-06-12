@@ -9,15 +9,15 @@ from pathlib import Path
 
 import pytest
 
-from yolo_waste_sorter.data.attribution import (
+from trashmonkey.data.attribution import (
     CENSUS_IMAGE_COUNTS,
     EXCLUDED_SOURCES,
     latex_escape,
     render_dataset_licenses,
     render_label_mapping,
 )
-from yolo_waste_sorter.data.download import DROP, SourceSpec, load_registry
-from yolo_waste_sorter.utils.config import Config, load_config
+from trashmonkey.data.download import DROP, SourceSpec, load_registry
+from trashmonkey.utils.config import Config, load_config
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATASETS_PATH = REPO_ROOT / "configs" / "datasets.yaml"

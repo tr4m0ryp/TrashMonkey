@@ -8,8 +8,8 @@ from typing import Any
 import pytest
 import yaml
 
-from yolo_waste_sorter.models.evaluation.report import ClassEval, EvalReport, TierReport
-from yolo_waste_sorter.models.thresholds import (
+from trashmonkey.models.evaluation.report import ClassEval, EvalReport, TierReport
+from trashmonkey.models.thresholds import (
     MAX_WRONG_BIN,
     REST,
     ThresholdError,
@@ -19,7 +19,7 @@ from yolo_waste_sorter.models.thresholds import (
     truth_from_manifest,
     tune_thresholds,
 )
-from yolo_waste_sorter.utils.config import Config, SweepConfig, load_config
+from trashmonkey.utils.config import Config, SweepConfig, load_config
 
 CLASSES = ("plastic", "paper", "cardboard", "metal", "glass", "organic")
 PARAMS = ThresholdParams(tau_frame=0.40, min_votes=3, high_water=0.60, conf_floor=0.25)

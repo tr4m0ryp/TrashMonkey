@@ -12,7 +12,7 @@ import numpy.typing as npt
 import pytest
 from PIL import Image
 
-from yolo_waste_sorter.data.autobox import (
+from trashmonkey.data.autobox import (
     PROMPTS,
     BoxRecord,
     Detection,

@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from item_helpers import make_items
 
-from yolo_waste_sorter.data.balance import balance_items
+from trashmonkey.data.balance import balance_items
 
 
 def test_cap_applies_and_never_duplicates() -> None:
@@ -47,7 +47,7 @@ def test_small_class_kept_whole() -> None:
 
 def test_floor_warning_logged_not_raised(caplog: pytest.LogCaptureFixture) -> None:
     items = make_items("organic", "gc3", 12)
-    with caplog.at_level(logging.WARNING, logger="yolo_waste_sorter.data.balance"):
+    with caplog.at_level(logging.WARNING, logger="trashmonkey.data.balance"):
         result = balance_items(items, cap=1500, floor=800)
     assert len(result.kept) == 12  # warning, never an error or a drop
     assert any("organic" in w and "800" in w for w in result.floor_warnings)

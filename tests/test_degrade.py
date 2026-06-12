@@ -9,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from yolo_waste_sorter.utils.degrade import build_train_stack, degrade_image
+from trashmonkey.utils.degrade import build_train_stack, degrade_image
 
 # --- stub config (do NOT import the task-001 loader) -------------------------
 

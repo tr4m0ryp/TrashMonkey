@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from yolo_waste_sorter.data.split import SplitResult
-from yolo_waste_sorter.models.evaluation.curves import CurveSet, save_curves
-from yolo_waste_sorter.models.evaluation.report import (
+from trashmonkey.data.split import SplitResult
+from trashmonkey.models.evaluation.curves import CurveSet, save_curves
+from trashmonkey.models.evaluation.report import (
     ClassEval,
     EvalReport,
     SeverityPoint,
     TierReport,
 )
-from yolo_waste_sorter.visualization.plots import (
+from trashmonkey.visualization.plots import (
     PlotError,
     SweepRow,
     load_curves_npz,

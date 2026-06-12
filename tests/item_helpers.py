@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from yolo_waste_sorter.data.dedup import Item
+from trashmonkey.data.dedup import Item
 
 
 def make_items(class_name: str, source: str, n: int) -> list[Item]:

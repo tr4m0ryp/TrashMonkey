@@ -20,9 +20,9 @@ test:
 	$(PYTEST)
 
 repro:
-	PYTHONPATH=src $(PY) -m yolo_waste_sorter.data.pipeline run
+	PYTHONPATH=src $(PY) -m trashmonkey.data.pipeline run
 
 # End-to-end smoke harness in a throwaway tmp dir. Uses real ultralytics when
 # installed; `FAKE_MODEL=1 make smoke` injects the offline fake-model mocks.
 smoke:
-	PYTHONPATH=src $(PY) -m yolo_waste_sorter.smoke
+	PYTHONPATH=src $(PY) -m trashmonkey.smoke

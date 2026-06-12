@@ -3,7 +3,7 @@
 import math
 from pathlib import Path
 
-from yolo_waste_sorter.data.qa import ProvenanceRecord, QAReport, run_checks
+from trashmonkey.data.qa import ProvenanceRecord, QAReport, run_checks
 
 BoxTuple = tuple[int, float, float, float, float]
 

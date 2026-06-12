@@ -6,7 +6,7 @@ import pytest
 import yaml
 from helpers import prov, write_labels
 
-from yolo_waste_sorter.data.qa import (
+from trashmonkey.data.qa import (
     FLAG_AREA_EXTREME,
     LOC_FAIL_MAX,
     REVIEW_FAIL_MAX,

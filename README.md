@@ -54,10 +54,10 @@ FAKE_MODEL=1 make smoke                            # offline dry run
 make test                                          # test suite
 
 pip install -e ".[boxing]" && make repro           # build the real dataset (Kaggle creds)
-python -m yolo_waste_sorter.models.train           # train
-python -m yolo_waste_sorter.models.evaluate        # three-tier evaluation
-python -m yolo_waste_sorter.models.thresholds      # tune the "rest" thresholds
-python -m yolo_waste_sorter.deploy.export --weights models/best.pt   # export (ONNX)
+python -m trashmonkey.models.train           # train
+python -m trashmonkey.models.evaluate        # three-tier evaluation
+python -m trashmonkey.models.thresholds      # tune the "rest" thresholds
+python -m trashmonkey.deploy.export --weights models/best.pt   # export (ONNX)
 ```
 </details>
 

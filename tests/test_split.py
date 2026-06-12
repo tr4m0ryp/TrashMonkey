@@ -14,9 +14,9 @@ from PIL import Image
 
 from item_helpers import make_items
 
-from yolo_waste_sorter.data.balance import balance_items
-from yolo_waste_sorter.data.dedup import Item, NearEdge, dedup_items, scan_remapped
-from yolo_waste_sorter.data.split import SplitError, emit_dataset, split_items
+from trashmonkey.data.balance import balance_items
+from trashmonkey.data.dedup import Item, NearEdge, dedup_items, scan_remapped
+from trashmonkey.data.split import SplitError, emit_dataset, split_items
 
 CLASSES = ("plastic", "paper", "cardboard", "metal", "glass", "organic")
 PRIORITY = ["trashnet", "gc3", "realwaste"]
@@ -56,7 +56,7 @@ def test_null_leave_out_source_warns_and_skips_test1(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     items = make_items("glass", "gc3", 20)
-    with caplog.at_level(logging.WARNING, logger="yolo_waste_sorter.data.split"):
+    with caplog.at_level(logging.WARNING, logger="trashmonkey.data.split"):
         result = split_items(items, [], leave_out_source=None, val_fraction=0.2)
     assert "test" not in result.counts
     assert set(result.assignments.values()) <= {"train", "val"}

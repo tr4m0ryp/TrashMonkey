@@ -1,4 +1,4 @@
-"""Tests for the typed config loader (yolo_waste_sorter.utils.config)."""
+"""Tests for the typed config loader (trashmonkey.utils.config)."""
 
 import dataclasses
 from pathlib import Path
@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from yolo_waste_sorter.utils.config import (
+from trashmonkey.utils.config import (
     DEFAULT_CONFIG_PATH,
     Config,
     ConfigError,

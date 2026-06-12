@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from helpers import prov, write_labels
 
-from yolo_waste_sorter.data.qa import (
+from trashmonkey.data.qa import (
     FLAG_AREA_EXTREME,
     FLAG_CENTERBOX,
     FLAG_LOW_CONFIDENCE,

@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 import yaml
 
-from yolo_waste_sorter.models.training import (
+from trashmonkey.models.training import (
     SMOKE_OVERRIDES,
     build_smoke_dataset,
     build_train_kwargs,
@@ -21,7 +21,7 @@ from yolo_waste_sorter.models.training import (
     train,
     validate_train_config,
 )
-from yolo_waste_sorter.utils.config import Config, load_config
+from trashmonkey.utils.config import Config, load_config
 
 CLASSES = ("plastic", "paper", "cardboard", "metal", "glass", "organic")
 

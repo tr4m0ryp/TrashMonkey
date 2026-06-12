@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from helpers import write_labels
 
-from yolo_waste_sorter.data.qa import Box, iou_crosscheck, iou_cxcywh
+from trashmonkey.data.qa import Box, iou_crosscheck, iou_cxcywh
 
 
 def test_iou_identical_boxes_is_one() -> None:

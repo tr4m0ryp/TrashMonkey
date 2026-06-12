@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from yolo_waste_sorter.data.download import FetcherSpec, SourceSpec
-from yolo_waste_sorter.data.remap import (
+from trashmonkey.data.download import FetcherSpec, SourceSpec
+from trashmonkey.data.remap import (
     ClassNamesError,
     RemapManifest,
     UnmappedLabelError,

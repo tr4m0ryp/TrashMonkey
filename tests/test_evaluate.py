@@ -13,8 +13,8 @@ import numpy as np
 import pytest
 import yaml
 
-import yolo_waste_sorter.models.evaluation as evaluation
-from yolo_waste_sorter.models.evaluation import (
+import trashmonkey.models.evaluation as evaluation
+from trashmonkey.models.evaluation import (
     CurveSet,
     EvalError,
     conf_at_precision,
@@ -24,7 +24,7 @@ from yolo_waste_sorter.models.evaluation import (
     load_report,
     materialize_severity,
 )
-from yolo_waste_sorter.utils.config import Config, load_config
+from trashmonkey.utils.config import Config, load_config
 
 CLASSES = ("plastic", "paper", "cardboard", "metal", "glass", "organic")
 VAL_KEYS = ("srcA/v0.jpg", "srcA/v1.jpg", "srcB/v2.jpg")

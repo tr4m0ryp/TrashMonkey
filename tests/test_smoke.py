@@ -1,6 +1,6 @@
 """End-to-end smoke harness test (task 016): the FAKE_MODEL=1 path in a tmp dir.
 
-Runs ``python -m yolo_waste_sorter.smoke`` as a subprocess (the fake
+Runs ``python -m trashmonkey.smoke`` as a subprocess (the fake
 ultralytics is injected into the child's sys.modules, never this process's)
 and asserts the full contract: exit 0, one PASS line per step, the processed
 dataset + eval report + thresholds.yaml + sweep.csv on disk, and the
@@ -52,7 +52,7 @@ def test_fake_model_smoke_end_to_end(tmp_path: Path) -> None:
         "PYTHONPATH": str(REPO_ROOT / "src"),
     }
     proc = subprocess.run(
-        [sys.executable, "-m", "yolo_waste_sorter.smoke", "--workdir", str(workdir)],
+        [sys.executable, "-m", "trashmonkey.smoke", "--workdir", str(workdir)],
         env=env,
         capture_output=True,
         text=True,
@@ -85,7 +85,7 @@ def test_no_backend_exits_with_clear_message(tmp_path: Path) -> None:
         key: value for key, value in os.environ.items() if key != "FAKE_MODEL"
     } | {"NO_ALBUMENTATIONS_UPDATE": "1", "PYTHONPATH": str(REPO_ROOT / "src")}
     proc = subprocess.run(
-        [sys.executable, "-m", "yolo_waste_sorter.smoke", "--workdir", str(tmp_path / "w")],
+        [sys.executable, "-m", "trashmonkey.smoke", "--workdir", str(tmp_path / "w")],
         env=env,
         capture_output=True,
         text=True,

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from yolo_waste_sorter.models.training import checkpoint_epoch, find_resumable
+from trashmonkey.models.training import checkpoint_epoch, find_resumable
 
 
 @pytest.fixture(autouse=True)

@@ -2,7 +2,7 @@
 #
 # The typed loader (utils/config) validates one file against the full schema
 # and has NO overlay support, so this file mirrors configs/config.yaml key for
-# key with smoke-sized values. The smoke harness (yolo_waste_sorter.smoke)
+# key with smoke-sized values. The smoke harness (trashmonkey.smoke)
 # rewrites `paths` into a throwaway workdir at runtime; the relative values
 # below only matter if this file is loaded directly (they stay clear of the
 # real data/ tree).
