@@ -15,10 +15,11 @@ private photography. Five sources (TrashNet, Drinking Waste, Garbage
 Detection, Recyclable & Household Waste, RealWaste) are downloaded,
 label-remapped onto the six target classes, auto-boxed where only
 classification labels exist, deduplicated, balanced, and merged into one
-YOLO dataset. Deployment is **target-agnostic**: weights export to any
-supported Ultralytics format (ONNX by default; TensorRT FP16 for NVIDIA
-edge devices such as the Jetson Orin Nano), and a stream runtime turns
-detections on live MJPEG video into per-object decisions.
+YOLO dataset. The repository deliberately **stops at the artifacts**: an
+exported model in any supported Ultralytics format (ONNX by default;
+TensorRT FP16 for NVIDIA edge devices, built on-device) plus the tuned
+`thresholds.yaml`. Wiring those artifacts to cameras or control hardware
+is an integration concern outside this repo's scope.
 
 Two design choices carry the project. First, **"rest" is not a trained
 class**: it is a multi-frame consensus rule applied downstream of the
