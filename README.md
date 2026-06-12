@@ -44,10 +44,10 @@ ties to a run config and a fixed seed (42).
                                                                           |
                 v-------------------------------------------------------+
 +----------------------+   +----------------------+   +----------------------------+
-| three-tier eval      |   | threshold tuner      |   | stream runtime             |
-| VAL / TEST-1 /       |-->| sweeps consensus     |-->| N MJPEG streams -> round-  |
-| TEST-2 (degraded)    |   | rule -> thresholds.  |   | robin inference -> votes   |
-+----------------------+   | yaml + sweep.csv     |   | -> (class, conf, time)     |
+| three-tier eval      |   | threshold tuner      |   | export                     |
+| VAL / TEST-1 /       |-->| sweeps consensus     |-->| onnx / engine / ... +      |
+| TEST-2 (degraded)    |   | rule -> thresholds.  |   | thresholds.yaml = the      |
++----------------------+   | yaml + sweep.csv     |   | deliverable artifacts      |
                            +----------------------+   +----------------------------+
 ```
 
