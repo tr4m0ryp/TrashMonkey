@@ -238,6 +238,7 @@ _REQUIRED_RECORD_KEYS = {
     "run_dir",
     "best_pt",
     "smoke",
+    "resumed_from",
 }
 
 

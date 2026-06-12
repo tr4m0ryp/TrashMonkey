@@ -1,7 +1,7 @@
 """The two T9 output artifacts: thresholds.yaml and sweep.csv.
 
-``thresholds.yaml`` (+ best.engine) is the complete deployment artifact the
-Jetson runtime (015) loads; ``sweep.csv`` is the plot-stage (014) input with
+``thresholds.yaml`` (+ the exported model) is the complete deployment artifact
+the runtime loads; ``sweep.csv`` is the plot-stage input with
 EXACTLY the columns
 ``tau_frame,min_votes,high_water,wrong_bin_rate,rest_rate,chosen``.
 Both writers are byte-deterministic for identical inputs.
