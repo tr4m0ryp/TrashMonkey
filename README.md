@@ -96,7 +96,9 @@ three hold over its sightings:
 
 Anything else -> **rest**. Starting values (`tau_frame` 0.40, `conf_floor`
 0.25) are sweep-tuned before deployment; the pure decision function lives in
-`src/yolo_waste_sorter/models/thresholding/consensus.py`.
+`src/yolo_waste_sorter/models/thresholding/consensus.py`, and
+`yolo_waste_sorter.deploy.load_threshold_params` is the matching fail-fast
+reader an integration can use to consume `thresholds.yaml`.
 
 ## Data Sources
 
