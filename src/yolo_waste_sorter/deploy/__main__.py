@@ -1,8 +1,8 @@
-"""Runtime entrypoint: ``python -m yolo_waste_sorter.deploy`` (on the Jetson).
+"""Runtime entrypoint: ``python -m yolo_waste_sorter.deploy``.
 
-Wires the TensorRT engine, the thresholds.yaml artifact, and the three
-grab-latest camera readers from config, then loops forever emitting one JSON
-decision line per object. Ctrl-C stops the readers cleanly.
+Wires the exported model, the thresholds.yaml artifact, and the grab-latest
+camera readers from config, then loops forever emitting one JSON decision
+line per object. Ctrl-C stops the readers cleanly.
 """
 
 from __future__ import annotations
