@@ -29,7 +29,6 @@ __all__ = [
     "Config",
     "ConfigError",
     "DefocusConfig",
-    "DeployConfig",
     "DownscaleConfig",
     "Esp32StackConfig",
     "EvalConfig",
