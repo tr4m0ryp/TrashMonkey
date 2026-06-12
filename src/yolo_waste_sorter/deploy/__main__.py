@@ -18,8 +18,8 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = argparse.ArgumentParser(
         prog="python -m yolo_waste_sorter.deploy",
-        description="Jetson runtime: 3x MJPEG -> round-robin engine inference -> "
-        "T9 consensus -> JSON decision lines (T8).",
+        description="Edge runtime: MJPEG streams -> round-robin inference -> "
+        "consensus -> JSON decision lines.",
     )
     parser.add_argument(
         "--config", type=Path, default=None, help="experiment yaml (default: configs/config.yaml)"
