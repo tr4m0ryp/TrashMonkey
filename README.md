@@ -1,33 +1,33 @@
-# yolo-waste-sorter: Six-Class Waste Detection for a Physical Sorting Machine
+# yolo-waste-sorter: Six-Class Waste Detection with Open-Set Rejection
 
 ## Project Overview
 
-Hand-sorting household waste is slow and error-prone, and most public
-waste-vision work stops at classification benchmarks rather than a running
-machine. This project closes that gap: a conveyor carries single items past
-three cheap ESP32-CAM wifi cameras, and a detector must decide -- within a
-1-2 second window -- which of six material bins the item belongs to:
-**plastic, paper, cardboard, metal, glass, organic**. Anything the model is
-not confident about must fall through to a "rest" bin rather than contaminate
-a material stream.
+Most public waste-vision work stops at classification benchmarks. This
+project packages the full path from raw public data to a deployable
+detector: a fine-tuned **YOLO11n** (Ultralytics) model that localizes and
+classifies single waste items into six material classes -- **plastic,
+paper, cardboard, metal, glass, organic** -- and refuses to guess when it
+is not confident. Anything the model cannot classify reliably is rejected
+as **"rest"** rather than forced into a material class.
 
-The solution is a fine-tuned **YOLO11n** (Ultralytics) detector trained
-entirely on **remapped public datasets** -- no in-house photography. Five
-sources (TrashNet, Drinking Waste, Garbage Detection, Recyclable & Household
-Waste, RealWaste) are downloaded, label-remapped onto the six target classes,
-auto-boxed where only classification labels exist, deduplicated, balanced,
-and merged into one YOLO dataset. The model is deployed as a **TensorRT FP16
-engine on an NVIDIA Jetson Orin Nano**, where inference (~5 ms/frame by
-design) is faster than the cameras can deliver frames -- the cheap cameras
-are the bottleneck, not the model.
+The model is trained entirely on **remapped public datasets** -- no
+private photography. Five sources (TrashNet, Drinking Waste, Garbage
+Detection, Recyclable & Household Waste, RealWaste) are downloaded,
+label-remapped onto the six target classes, auto-boxed where only
+classification labels exist, deduplicated, balanced, and merged into one
+YOLO dataset. Deployment is **target-agnostic**: weights export to any
+supported Ultralytics format (ONNX by default; TensorRT FP16 for NVIDIA
+edge devices such as the Jetson Orin Nano), and a stream runtime turns
+detections on live MJPEG video into per-object decisions.
 
 Two design choices carry the project. First, **"rest" is not a trained
-class**: it is a multi-frame consensus rule in control logic, because a
-single confidence check provably leaks unknown objects, while a voting rule
-requires the model to be fooled the same way repeatedly. Second, **honest
-evaluation**: an entire source dataset (RealWaste) is held out as an unseen
-test set, and a camera-degraded copy of it serves as the demo-day proxy
-metric. Every reported number ties to a run config and a fixed seed (42).
+class**: it is a multi-frame consensus rule applied downstream of the
+detector, because a single confidence check provably leaks unknown
+objects, while a voting rule requires the model to be fooled the same way
+repeatedly. Second, **honest evaluation**: an entire source dataset
+(RealWaste) is held out as an unseen test set, and a camera-degraded copy
+of it estimates accuracy under low-cost imaging. Every reported number
+ties to a run config and a fixed seed (42).
 
 ## How It Works
 
@@ -36,17 +36,17 @@ metric. Every reported number ties to a run config and a fixed seed (42).
 +-----------------+   +--------------------------------------+   +-----------------+
 | trashnet        |   | download -> remap -> autobox -> qa   |   | yolo11n.pt      |
 | drinking-waste  |-->|  -> dedup -> balance -> split        |-->| AdamW, seeded,  |
-| garbage-det.    |   | (Grounding DINO boxes, pHash dedup,  |   | ESP32-CAM       |
-| household-waste |   |  QA gate halts on bad boxes)         |   | degradation     |
-| realwaste*      |   +--------------------------------------+   | stack           |
-+-----------------+        *held out, never trained             +--------+--------+
+| garbage-det.    |   | (Grounding DINO boxes, pHash dedup,  |   | camera-degrade  |
+| household-waste |   |  QA gate halts on bad boxes)         |   | augmentation    |
+| realwaste*      |   +--------------------------------------+   +--------+--------+
++-----------------+        *held out, never trained                       |
                                                                           |
                 v-------------------------------------------------------+
 +----------------------+   +----------------------+   +----------------------------+
-| three-tier eval      |   | threshold tuner      |   | Jetson Orin Nano runtime   |
-| VAL / TEST-1 /       |-->| sweeps consensus     |-->| 3x MJPEG -> round-robin    |
-| TEST-2 (degraded)    |   | rule -> thresholds.  |   | TensorRT FP16 -> votes ->  |
-+----------------------+   | yaml + sweep.csv     |   | (class, conf, timestamp)   |
+| three-tier eval      |   | threshold tuner      |   | stream runtime             |
+| VAL / TEST-1 /       |-->| sweeps consensus     |-->| N MJPEG streams -> round-  |
+| TEST-2 (degraded)    |   | rule -> thresholds.  |   | robin inference -> votes   |
++----------------------+   | yaml + sweep.csv     |   | -> (class, conf, time)     |
                            +----------------------+   +----------------------------+
 ```
 
@@ -60,8 +60,8 @@ metric. Every reported number ties to a run config and a fixed seed (42).
    the **open-set probe pool** for threshold tuning -- never training data.
 2. **Training** -- full fine-tune of COCO-pretrained `yolo11n.pt` with a
    pinned AdamW recipe (Ultralytics' `optimizer='auto'` silently flips to SGD
-   with dataset size, so it is pinned). An Albumentations stack simulates the
-   ESP32-CAM OV2640 sensor at train time -- JPEG blocking, ISO noise, motion
+   with dataset size, so it is pinned). An Albumentations stack simulates
+   low-cost camera sensors at train time -- JPEG blocking, ISO noise, motion
    blur, white-balance drift, downscaling -- so cheap-camera artifacts are
    learned, not feared. GPU runs go through `notebooks/manager.ipynb` on
    Colab; every run appends config, git hash, metrics, and runtime to
@@ -69,22 +69,23 @@ metric. Every reported number ties to a run config and a fixed seed (42).
 3. **Evaluation** -- three tiers: **VAL** (stratified 15% split, the
    optimistic number), **TEST-1** (leave-one-source-out RealWaste, the
    generalization number), and **TEST-2** (TEST-1 degraded at severities 1-5,
-   the demo-day prediction).
+   the expected accuracy under degraded imaging).
 4. **Threshold tuning** -- a deterministic sweep over the consensus
-   parameters (per-frame tau, vote count, high-water mark) trades wrong-bin
-   rate against rest rate on degraded frames plus the open-set probe pool,
-   then emits `thresholds.yaml` -- the deployment artifact that ships next to
-   the engine.
-5. **Jetson runtime** -- grab-latest MJPEG readers (stale frames dropped),
-   round-robin inference over the three streams, per-object vote aggregation
-   within a 1.5 s window, and one JSON decision line
-   `(class, confidence, timestamp)` per object handed to the control logic.
+   parameters (per-frame tau, vote count, high-water mark) trades
+   misclassification rate against rejection rate on degraded frames plus the
+   open-set probe pool, then emits `thresholds.yaml` -- the deployment
+   artifact that ships next to the exported model.
+5. **Stream runtime** -- grab-latest MJPEG readers (stale frames dropped),
+   round-robin inference over the configured streams, per-object vote
+   aggregation within a configurable window, and one JSON decision line
+   `(class, confidence, timestamp)` per object for downstream consumers.
 
-### The consensus rule ("rest" without a rest class)
+### The consensus rule (open-set rejection without a rest class)
 
-A frame casts a **qualified vote** for class `c` when its top detection is
-`c` with score >= `tau_frame`. An object sorts to bin `c` only if all three
-hold over its sightings:
+The runtime assumes one object in view per stream at a time. A frame casts
+a **qualified vote** for class `c` when its top detection is `c` with score
+>= `tau_frame`. An object is assigned class `c` only if all three hold over
+its sightings:
 
 | Condition | Default | Meaning |
 |---|---|---|
@@ -164,21 +165,34 @@ python -m yolo_waste_sorter.models.thresholds           # sweep -> thresholds.ya
 </details>
 
 <details>
-<summary>Jetson Orin Nano deployment</summary>
+<summary>Deployment</summary>
 
-TensorRT engines are device-bound (TRT version + compute capability), so the
-export runs **on the Jetson** -- the export script refuses non-aarch64 hosts:
+Export trained weights to any supported Ultralytics format -- ONNX is the
+portable default; TensorRT (`--format engine`) targets NVIDIA edge devices
+and must run **on the deployment device** (engines are bound to the TensorRT
+version and compute capability, so the export script refuses non-aarch64
+hosts unless forced):
 
 ```bash
-python -m yolo_waste_sorter.deploy.check_env             # L4T, power mode, camera streams (read-only)
-python -m yolo_waste_sorter.deploy.export --weights models/best.pt   # FP16, batch 1, smoke-tested
-python -m yolo_waste_sorter.deploy                        # 3x MJPEG -> consensus -> JSON decisions
+python -m yolo_waste_sorter.deploy.export --weights models/best.pt                  # ONNX
+python -m yolo_waste_sorter.deploy.export --weights models/best.pt --format engine  # TensorRT FP16
 ```
 
-Target stack: JetPack 6.2.2 (L4T 36.5.0), MAXN power mode
-(`sudo nvpmodel -m 2; sudo jetson_clocks` -- `check_env` prints remediation,
-never runs it). Camera URLs and the decision window live under `deploy:` in
-`configs/config.yaml`.
+Point `deploy.model` in `configs/config.yaml` at the exported artifact,
+place `thresholds.yaml` beside it, configure the MJPEG stream URLs (any
+count), and run the stream runtime:
+
+```bash
+python -m yolo_waste_sorter.deploy        # N MJPEG streams -> consensus -> JSON decisions
+```
+
+For NVIDIA Jetson targets there is an optional read-only environment check
+(L4T version, power mode, stream reachability -- prints remediations,
+never changes state):
+
+```bash
+python -m yolo_waste_sorter.deploy.check_env
+```
 </details>
 
 ## Technical Details
@@ -195,14 +209,14 @@ never runs it). Camera URLs and the decision window live under `deploy:` in
 | `src/yolo_waste_sorter/models/training/` | seeded fine-tune, smoke mode, run logging to `experiments/runs.jsonl` |
 | `src/yolo_waste_sorter/models/evaluation/` | three-tier eval, severity curves, report artifact |
 | `src/yolo_waste_sorter/models/thresholding/` | consensus rule, simulation, sweep, `thresholds.yaml` writer |
-| `src/yolo_waste_sorter/deploy/` | env check, on-device TensorRT export, MJPEG runtime |
+| `src/yolo_waste_sorter/deploy/` | multi-format export, MJPEG stream runtime, optional Jetson env check |
 | `src/yolo_waste_sorter/smoke/` | offline end-to-end harness (`FAKE_MODEL=1` supported) |
 | `paper.tex` + `refs.bib` | technical report (NeurIPS template); `make paper` builds via tectonic |
 
 Training recipe highlights (full values in `configs/config.yaml`): AdamW
 `lr0=0.001 -> lrf=0.01`, 100 epochs, batch 16, `imgsz=640`,
 `deterministic=true`, `cache=disk` (RAM caching breaks determinism),
-`close_mosaic=10`, 180-degree rotation + flips (conveyor items have no
+`close_mosaic=10`, 180-degree rotation + flips (waste items have no
 canonical orientation), `hsv_h` kept low at 0.015 because hue is the material
 cue. Fallback if nano underperforms: `yolo11s.pt` -- but only after data
 fixes, per the escalation policy in `models/training/escalation.py`.
@@ -216,20 +230,18 @@ byte-identical `thresholds.yaml` and `sweep.csv`.
 - First full GPU training run and the three-tier numbers it produces (the
   pipeline, eval, tuner, and runtime are built and smoke-tested end to end).
 - Threshold sweep on real degraded frames + open-set probes; freeze
-  `thresholds.yaml` for the demo.
-- On-device export and live three-camera run on the sorting machine.
-- Design rationale and the decision log live in
-  `research/yolo11-waste-detection-finetune.md` (plain-language companion:
-  `research/yolo11-waste-detection-finetune-summary.md`).
+  `thresholds.yaml`.
+- Latency benchmarks of exported artifacts on reference edge hardware.
 
 ## Limitations and License
 
-Single-object, white-conveyor presentation is a hard assumption -- this is
-not a cluttered-scene detector. Training data is public-dataset only, so
-domain gap to the real conveyor is managed (degradation stack, degraded test
-tier, consensus rule) rather than eliminated; the rest bin exists precisely
-because the model will be wrong sometimes. Latency figures are design
-estimates until measured on the device.
+Single-object, plain-background presentation is a hard assumption -- this is
+not a cluttered-scene detector. Training data is public-dataset only, so the
+domain gap to any specific camera setup is managed (degradation-aware
+augmentation, degraded test tier, consensus rejection) rather than
+eliminated; the rest outcome exists precisely because the model will be
+wrong sometimes. Latency figures are design estimates until measured on
+target hardware.
 
 Licensed under **AGPL-3.0-or-later** (see `LICENSE`) -- inherited from the
 Ultralytics ecosystem. Dataset licenses and attributions are listed above and
