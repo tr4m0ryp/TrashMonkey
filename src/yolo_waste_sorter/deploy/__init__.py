@@ -1,16 +1,15 @@
-"""Deployment package: grab-latest streams, consensus runtime, export, checks.
+"""Deployment-artifact tooling: model export + thresholds.yaml reader.
 
-Deployment is target-agnostic: weights export to any supported Ultralytics
-format (ONNX by default, TensorRT for NVIDIA edge devices such as the Jetson
-Orin Nano), and the runtime loads whatever artifact ``deploy.model`` points
-at. The runtime IMPORTS the shared consensus rule from
-``yolo_waste_sorter.models.thresholds`` -- it is never reimplemented here.
-Emitted decisions use the literal string ``"rest"`` (``REST_LABEL``) as the
-wire form of the REST sentinel; "rest" is NOT a trained class.
+This repo stops at the artifacts: exported weights (any supported
+Ultralytics format -- ONNX by default, TensorRT for NVIDIA edge devices)
+and the tuned ``thresholds.yaml``. Wiring those artifacts to cameras and
+control hardware is a downstream integration concern and lives outside
+this repository. ``load_threshold_params`` is the fail-fast reader an
+integration can use to consume the thresholds artifact; the consensus
+decision rule itself lives in ``yolo_waste_sorter.models.thresholds``.
 """
 
 from yolo_waste_sorter.deploy.artifacts import load_threshold_params
-from yolo_waste_sorter.deploy.check_env import CheckResult, format_table, run_checks
 from yolo_waste_sorter.deploy.export import (
     SUPPORTED_FORMATS,
     ExportError,
@@ -18,38 +17,12 @@ from yolo_waste_sorter.deploy.export import (
     export_engine,
     export_model,
 )
-from yolo_waste_sorter.deploy.runtime import (
-    REST_LABEL,
-    DecisionEvent,
-    DeployError,
-    EmitFn,
-    PredictFn,
-    Runtime,
-    build_runtime,
-    load_model_predictor,
-)
-from yolo_waste_sorter.deploy.streams import CameraReader, Frame, StreamError, start_readers
 
 __all__ = [
-    "REST_LABEL",
     "SUPPORTED_FORMATS",
-    "CameraReader",
-    "CheckResult",
-    "DecisionEvent",
-    "DeployError",
-    "EmitFn",
     "ExportError",
-    "Frame",
-    "PredictFn",
-    "Runtime",
-    "StreamError",
-    "build_runtime",
     "ensure_jetson_arch",
     "export_engine",
     "export_model",
-    "format_table",
-    "load_model_predictor",
     "load_threshold_params",
-    "run_checks",
-    "start_readers",
 ]
