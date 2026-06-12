@@ -101,6 +101,7 @@ def build_run_record(
         "run_dir": str(run_dir),
         "best_pt": str(best_pt),
         "smoke": smoke,
+        "resumed_from": str(resumed_from) if resumed_from is not None else None,
     }
 
 
