@@ -306,6 +306,39 @@ def test_escalation_fails_on_missing_class() -> None:
     assert block["per_class"]["organic"] == {"map50": None, "recall": None, "passed": False}
 
 
+# --- resume -----------------------------------------------------------------------
+
+
+def _make_last_pt(tmp_path: Path) -> Path:
+    last_pt = tmp_path / "prior" / "weights" / "last.pt"
+    last_pt.parent.mkdir(parents=True)
+    last_pt.write_bytes(b"fake interrupted checkpoint")
+    return last_pt
+
+
+def test_resume_loads_checkpoint_and_sets_flag(
+    cfg: Config, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _install_fake_ultralytics(monkeypatch)
+    last_pt = _make_last_pt(tmp_path)
+    _run(cfg, tmp_path, resume=last_pt)
+    assert calls["model"] == str(last_pt)  # model loads from last.pt, not the base
+    assert calls["train_kwargs"]["resume"] == str(last_pt)
+    record = json.loads((tmp_path / "runs.jsonl").read_text().splitlines()[0])
+    assert record["resumed_from"] == str(last_pt)
+
+
+def test_resume_missing_checkpoint_rejected(cfg: Config, tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="resume checkpoint missing"):
+        _run(cfg, tmp_path, resume=tmp_path / "absent" / "last.pt")
+
+
+def test_resume_rejected_in_smoke_mode(cfg: Config, tmp_path: Path) -> None:
+    last_pt = _make_last_pt(tmp_path)
+    with pytest.raises(ValueError, match="incompatible with smoke mode"):
+        _run(cfg, tmp_path, smoke=True, resume=last_pt)
+
+
 # --- smoke mode -------------------------------------------------------------------
 
 
