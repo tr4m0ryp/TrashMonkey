@@ -17,6 +17,7 @@ from yolo_waste_sorter.models.training.guards import (
     validate_train_config,
 )
 from yolo_waste_sorter.models.training.kwargs import SMOKE_OVERRIDES, build_train_kwargs
+from yolo_waste_sorter.models.training.resume import checkpoint_epoch, find_resumable
 from yolo_waste_sorter.models.training.runlog import append_run_record, build_run_record
 from yolo_waste_sorter.models.training.smoke import build_smoke_dataset
 
@@ -30,7 +31,9 @@ __all__ = [
     "build_smoke_dataset",
     "build_train_kwargs",
     "check_escalation",
+    "checkpoint_epoch",
     "extract_metrics",
+    "find_resumable",
     "require_augmentations_support",
     "smoke_requested",
     "train",
