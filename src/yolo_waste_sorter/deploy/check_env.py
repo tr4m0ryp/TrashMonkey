@@ -123,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = argparse.ArgumentParser(
         prog="python -m yolo_waste_sorter.deploy.check_env",
-        description="Read-only Jetson deployment checks: L4T, power mode, camera streams (T8).",
+        description="Read-only checks for Jetson targets: L4T, power mode, camera streams.",
     )
     parser.add_argument(
         "--config", type=Path, default=None, help="experiment yaml (default: configs/config.yaml)"
