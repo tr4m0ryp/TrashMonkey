@@ -147,19 +147,19 @@ class ThresholdsConfig:
 
 @dataclass(frozen=True)
 class DeployConfig:
-    """T8 Jetson runtime: camera streams, object window, engine artifact.
+    """Deployment runtime: camera streams, object window, model artifact.
 
-    ``cameras`` are the ESP32-CAM MJPEG stream URLs (one grab-latest reader
-    thread each); ``window_seconds`` is the per-object vote window (T9);
-    ``engine`` is the on-device TensorRT artifact (R5: exported ON the
-    Jetson); ``stale_after_s`` drops frames older than the freshness budget;
-    ``reconnect_backoff_s`` paces stream reconnects (F11: the cameras, not
-    the Orin, are where latency risk lives).
+    ``cameras`` are MJPEG stream URLs, any count (one grab-latest reader
+    thread each); ``window_seconds`` is the per-object vote window;
+    ``model`` is the exported artifact in any Ultralytics-loadable format
+    (.pt/.onnx/.engine/...; TensorRT engines must be built on the deployment
+    device); ``stale_after_s`` drops frames older than the freshness budget;
+    ``reconnect_backoff_s`` paces stream reconnects.
     """
 
     cameras: tuple[str, ...]
     window_seconds: float
-    engine: Path
+    model: Path
     reconnect_backoff_s: float
     stale_after_s: float
 
