@@ -15,7 +15,7 @@ class: items are binned by a **multi-frame consensus rule**, and anything that
 fails it rides off into a "rest" bin.
 
 > Course project with a live demo target. Every reported number ties to a run
-> config; seeds are fixed; the technical report builds from this repo.
+> config and seeds are fixed.
 
 ## How it works
 
