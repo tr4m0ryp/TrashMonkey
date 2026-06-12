@@ -28,7 +28,7 @@ def main(argv: list[str] | None = None) -> int:
         "--thresholds",
         type=Path,
         default=None,
-        help="thresholds.yaml artifact (default: beside the engine from deploy.engine)",
+        help="thresholds.yaml artifact (default: beside the model from deploy.model)",
     )
     args = parser.parse_args(argv)
 
