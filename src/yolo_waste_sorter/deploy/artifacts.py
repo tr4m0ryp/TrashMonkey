@@ -1,8 +1,8 @@
-"""Reader for the T9 deployment artifact ``thresholds.yaml``.
+"""Reader for the deployment artifact ``thresholds.yaml``.
 
-The thresholding package (012) only WRITES the artifact
+The thresholding package only WRITES the artifact
 (``models.thresholding.artifacts.write_thresholds_yaml``); this is the
-matching fail-fast reader the Jetson runtime uses. The schema is exactly what
+matching fail-fast reader the deployment runtime uses. The schema is exactly what
 the writer emits: ``tau_frame`` (float, or mapping class_id -> float in
 per-class mode), ``min_votes``, ``high_water``, ``conf_floor``, plus the
 informational ``constraint_met`` and ``selected_metrics`` blocks. Unknown or
