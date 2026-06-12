@@ -76,17 +76,17 @@ ties to a run config and a fixed seed (42).
    misclassification rate against rejection rate on degraded frames plus the
    open-set probe pool, then emits `thresholds.yaml` -- the deployment
    artifact that ships next to the exported model.
-5. **Stream runtime** -- grab-latest MJPEG readers (stale frames dropped),
-   round-robin inference over the configured streams, per-object vote
-   aggregation within a configurable window, and one JSON decision line
-   `(class, confidence, timestamp)` per object for downstream consumers.
+5. **Export** -- trained weights export to any supported Ultralytics format
+   (ONNX default; TensorRT on-device) with a dummy-inference smoke test.
+   The exported model plus `thresholds.yaml` are the repo's deliverables;
+   consuming them in a live system is up to the integration.
 
 ### The consensus rule (open-set rejection without a rest class)
 
-The runtime assumes one object in view per stream at a time. A frame casts
-a **qualified vote** for class `c` when its top detection is `c` with score
->= `tau_frame`. An object is assigned class `c` only if all three hold over
-its sightings:
+The rule is defined over a sequence of frames observing a single object. A
+frame casts a **qualified vote** for class `c` when its top detection is `c`
+with score >= `tau_frame`. The object is assigned class `c` only if all
+three hold over its sightings:
 
 | Condition | Default | Meaning |
 |---|---|---|
