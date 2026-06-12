@@ -77,6 +77,7 @@ def build_run_record(
     run_dir: Path,
     best_pt: Path,
     smoke: bool,
+    resumed_from: Path | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     """Assemble one runs.jsonl record; ``metrics`` comes from best.pt final eval."""

@@ -91,7 +91,7 @@ def check_camera(url: str, timeout_s: float = CAMERA_PROBE_TIMEOUT_S) -> CheckRe
             name=name,
             ok=False,
             detail=f"unreachable: {err}",
-            remediation="power-cycle the camera; verify the dedicated 2.4 GHz AP (F7)",
+            remediation="power-cycle the camera; verify its network path",
         )
 
 
