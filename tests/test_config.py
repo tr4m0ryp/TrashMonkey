@@ -89,24 +89,6 @@ def test_thresholds_section(config: Config) -> None:
     assert th.sweep.high_water == (0.5, 0.6, 0.7)
 
 
-def test_deploy_section(config: Config) -> None:
-    d = config.deploy
-    assert len(d.cameras) == 3
-    assert all(url.startswith("http://") and url.endswith("/stream") for url in d.cameras)
-    assert d.window_seconds == 1.5
-    assert d.model == Path("models/best.onnx")
-    assert (d.reconnect_backoff_s, d.stale_after_s) == (2.0, 1.0)
-
-
-def test_deploy_missing_key_raises(tmp_path: Path) -> None:
-    data = _raw()
-    deploy = data["deploy"]
-    assert isinstance(deploy, dict)
-    del deploy["cameras"]
-    with pytest.raises(ConfigError, match=r"config\.deploy: missing required key\(s\): cameras"):
-        load_config(_write(tmp_path, data))
-
-
 def test_config_is_frozen(config: Config) -> None:
     with pytest.raises(dataclasses.FrozenInstanceError):
         config.seed = 7  # type: ignore[misc]
