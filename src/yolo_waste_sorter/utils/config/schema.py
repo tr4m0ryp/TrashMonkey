@@ -146,25 +146,6 @@ class ThresholdsConfig:
 
 
 @dataclass(frozen=True)
-class DeployConfig:
-    """Deployment runtime: camera streams, object window, model artifact.
-
-    ``cameras`` are MJPEG stream URLs, any count (one grab-latest reader
-    thread each); ``window_seconds`` is the per-object vote window;
-    ``model`` is the exported artifact in any Ultralytics-loadable format
-    (.pt/.onnx/.engine/...; TensorRT engines must be built on the deployment
-    device); ``stale_after_s`` drops frames older than the freshness budget;
-    ``reconnect_backoff_s`` paces stream reconnects.
-    """
-
-    cameras: tuple[str, ...]
-    window_seconds: float
-    model: Path
-    reconnect_backoff_s: float
-    stale_after_s: float
-
-
-@dataclass(frozen=True)
 class Config:
     seed: int
     paths: PathsConfig
@@ -175,4 +156,3 @@ class Config:
     augment: AugmentConfig
     eval: EvalConfig
     thresholds: ThresholdsConfig
-    deploy: DeployConfig
