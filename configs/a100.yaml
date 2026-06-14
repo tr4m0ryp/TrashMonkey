@@ -1,0 +1,124 @@
+# A100 profile: configs/config.yaml byte-for-byte EXCEPT train.batch and
+# train.workers. The typed loader has no overlay support (utils/config), so --
+# like smoke.yaml -- this is a COMPLETE standalone config validated against the
+# full schema. Use it on a large GPU:
+#   python -m trashmonkey.models.train --config configs/a100.yaml
+# The manager notebook does NOT need this file: it auto-detects the accelerator
+# and resolves the same knobs at runtime (training/autobatch.py). This file is
+# the explicit, version-controlled recipe for the CLI / non-notebook path.
+#
+# batch=64 is ultralytics' nominal batch size (nbs): accumulate stays 1 and the
+# weight-decay / LR scaling is identical to the batch-16 recipe, so the only
+# change versus baseline is throughput (fewer, larger steps), not the
+# optimisation. experiment.name stays `baseline` so this run reads the SAME
+# processed dataset (data/processed/<name>/) the baseline pipeline built.
+seed: 42
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  external: data/external
+  models: models
+  reports: reports
+
+experiment:
+  name: baseline
+
+model:
+  base: yolo11n.pt        # fallback if accuracy disappoints: yolo11s.pt
+  imgsz: 640
+
+# Target label map -- every source dataset remaps onto these six.
+# "rest" is NOT a class: it is a confidence-threshold rule in control logic.
+classes:
+  - plastic
+  - paper
+  - cardboard
+  - metal
+  - glass
+  - organic
+
+# T7 fine-tuning recipe: pinned AdamW (optimizer='auto' silently flips to SGD
+# at 10k iterations), full fine-tune (freeze: null), cache disk (cache ram
+# breaks determinism even with a fixed seed).
+# A100 deltas: batch 16 -> 64 (= nbs, recipe-preserving), workers 8 -> 16.
+train:
+  epochs: 100
+  optimizer: AdamW
+  lr0: 0.001
+  lrf: 0.01
+  momentum: 0.9
+  weight_decay: 0.0005
+  warmup_epochs: 3.0
+  batch: 64
+  imgsz: 640
+  patience: 50
+  close_mosaic: 10
+  cache: disk
+  amp: true
+  deterministic: true
+  freeze: null
+  workers: 16
+
+# T5 augmentation: native Ultralytics args plus an Albumentations stack that
+# simulates the ESP32-CAM OV2640 (JPEG blocking, sensor noise, WB drift, blur).
+# hsv_h stays at 0.015 -- hue is the material cue; PlanckianJitter covers WB.
+augment:
+  degrees: 180
+  flipud: 0.5
+  fliplr: 0.5
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.5
+  translate: 0.1
+  scale: 0.5
+  mosaic: 1.0
+  mixup: 0.0
+  cutmix: 0.0
+  shear: 0.0
+  perspective: 0.0
+  copy_paste: 0.0
+  # Keys are snake_case Albumentations transform names; inner keys are the
+  # transforms' constructor kwargs (build_train_stack passes them through).
+  esp32_stack:
+    image_compression:
+      quality_range: [50, 85]
+      p: 0.5
+    iso_noise:
+      p: 0.3
+    gauss_noise:
+      p: 0.2
+    motion_blur:
+      blur_limit: [3, 7]
+      p: 0.3
+    defocus:
+      radius: [1, 3]
+      p: 0.1
+    planckian_jitter:
+      p: 0.3
+    downscale:
+      scale_range: [0.4, 0.75]
+      p: 0.3
+    random_brightness_contrast:
+      p: 0.2
+
+# T6 three-tier eval. Census picked RealWaste as the held-out TEST-1 source
+# (leave-one-source-out: all six classes, real degraded items, never trained).
+eval:
+  val_fraction: 0.15
+  leave_out_source: realwaste
+  test2_severities: [1, 2, 3, 4, 5]
+
+# T9 rest-bin consensus rule: permissive per-frame conf_floor, qualified votes
+# at tau_frame, min_votes + strict majority, high_water single-frame gate.
+# Starting values are sweep-tuned on degraded frames before deployment.
+thresholds:
+  conf_floor: 0.25
+  tau_frame: 0.40
+  min_votes: 3
+  high_water: 0.60
+  sweep:
+    tau_frame: [0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
+    min_votes: [2, 3, 4, 5]
+    high_water: [0.5, 0.6, 0.7]
