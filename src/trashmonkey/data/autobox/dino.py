@@ -13,6 +13,7 @@ CPU. Weights download from the HF Hub on first use (public model, no token).
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from trashmonkey.data.autobox.types import (
     DEFAULT_TEXT_THRESHOLD,
