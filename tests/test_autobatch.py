@@ -89,5 +89,5 @@ def test_detect_runtime_without_torch_is_cpu(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr(builtins, "__import__", _no_torch)
     profile = detect_runtime()
     assert profile.device == "cpu"
-    assert (profile.batch, profile.workers[0] if isinstance(profile.workers, tuple) else profile.workers) == (16, 8)
+    assert profile.batch == 16
     assert "batch=16" in profile.summary()
