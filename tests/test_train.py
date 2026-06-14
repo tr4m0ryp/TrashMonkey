@@ -168,6 +168,7 @@ def test_train_kwargs_snapshot(cfg: Config) -> None:
         "optimizer": "AdamW",
         "lr0": 0.001,
         "lrf": 0.01,
+        "cos_lr": False,
         "momentum": 0.9,
         "weight_decay": 0.0005,
         "warmup_epochs": 3.0,
