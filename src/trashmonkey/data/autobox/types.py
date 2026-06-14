@@ -39,8 +39,8 @@ CENTER_BOX_MARGIN: float = 0.05
 INSTALL_HINT: str = (
     "Auto-boxing backend '{backend}' is unavailable: {package} is not installed. "
     "Install the 'boxing' extra: pip install 'trashmonkey[boxing]'. "
-    "It pins autodistill, autodistill-grounding-dino and rembg[cpu] (the cpu/gpu "
-    "extra of rembg supplies the onnxruntime that runs the BiRefNet session)."
+    "It pins transformers (the HF-native Grounding DINO) and rembg[cpu] (the "
+    "cpu/gpu extra of rembg supplies the onnxruntime that runs the BiRefNet session)."
 )
 
 Method = Literal["dino", "birefnet", "centerbox"]
