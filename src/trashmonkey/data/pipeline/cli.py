@@ -28,11 +28,13 @@ EXIT_FAILED = 1
 EXIT_QA_HALT = 2
 
 
-def build_context(config_path: Path, *, ack_review: bool = False) -> PipelineContext:
+def build_context(
+    config_path: Path, *, ack_review: bool = False, progress: ProgressSink | None = None
+) -> PipelineContext:
     """Load the typed config plus the sibling datasets.yaml registry."""
     cfg = load_config(config_path)
     registry = load_registry(config_path.parent / "datasets.yaml", cfg.classes)
-    return PipelineContext(cfg=cfg, registry=registry, ack_review=ack_review)
+    return PipelineContext(cfg=cfg, registry=registry, ack_review=ack_review, progress=progress)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
