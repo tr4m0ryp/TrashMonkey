@@ -234,12 +234,16 @@ def test_build_dataset_threads_ack_review(monkeypatch: pytest.MonkeyPatch) -> No
         cfg = type("C", (), {"seed": 42})()
 
     monkeypatch.setattr(
-        build_mod, "build_context", lambda path, *, ack_review: seen.update(path=path, ack=ack_review) or FakeCtx()
+        build_mod,
+        "build_context",
+        lambda path, *, ack_review, progress=None: seen.update(path=path, ack=ack_review) or FakeCtx(),
     )
     monkeypatch.setattr(build_mod, "set_seed", lambda seed: seen.update(seed=seed))
     monkeypatch.setattr(build_mod, "build_stages", lambda: ("s",))
     monkeypatch.setattr(
-        build_mod, "run_pipeline", lambda stages, ctx, *, start, force: {"download": "ran"}
+        build_mod,
+        "run_pipeline",
+        lambda stages, ctx, *, start, force, on_stage=None: {"download": "ran"},
     )
 
     result = build_mod.build_dataset(Path("configs/config.yaml"), ack_review=True)
