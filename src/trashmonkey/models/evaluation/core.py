@@ -164,15 +164,17 @@ def evaluate(
 
     escalation = check_escalation(extract_metrics(val_results), cfg.classes)
 
+    _free_gpu()  # reclaim the val/test fragmentation before the dump's predict
     detections_path = out_dir / DETECTIONS_FILENAME
     conf = cfg.thresholds.conf_floor
+    imgsz = cfg.model.imgsz
     with open(detections_path, "w", encoding="utf-8") as out:
         dump_detections(
-            model, split_images(data_yaml, "val"), CLEAN_SEVERITY, index, out, conf=conf
+            model, split_images(data_yaml, "val"), CLEAN_SEVERITY, index, out, conf=conf, imgsz=imgsz
         )
         for severity in cfg.eval.test2_severities:
             images = split_images(severity_yamls[severity], "val")
-            dump_detections(model, images, severity, index, out, conf=conf)
+            dump_detections(model, images, severity, index, out, conf=conf, imgsz=imgsz)
 
     report = EvalReport(
         seed=cfg.seed,
