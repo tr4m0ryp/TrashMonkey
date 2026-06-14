@@ -21,8 +21,9 @@ def cfg() -> Config:
     ("vram_gb", "expected_batch"),
     [
         (80.0, 64),  # A100-80 / H100-80
-        (40.0, 64),  # A100-40 (boundary)
-        (39.9, 48),  # just below -> L4 tier
+        (39.5, 64),  # A100-40 reports ~39.5 GiB -> batch 64 (the calibration fix)
+        (38.0, 64),  # top-tier boundary
+        (37.9, 48),  # just below -> L4 tier
         (24.0, 48),  # L4
         (16.0, 32),  # T4 / G4
         (14.0, 32),  # T4 boundary
