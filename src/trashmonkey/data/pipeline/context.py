@@ -17,6 +17,7 @@ from trashmonkey.data.autobox import DinoPredictFn, MaskFn
 from trashmonkey.data.download.registry import SourceSpec
 from trashmonkey.data.remap import REMAPPED_DIRNAME, WILDERNESS_DIRNAME
 from trashmonkey.utils.config.schema import Config
+from trashmonkey.utils.progress import ProgressSink
 
 PIPELINE_DIRNAME = "pipeline"
 AUTOBOX_DIRNAME = "autobox"
