@@ -101,6 +101,10 @@ sources:
       PET: plastic    # 1,508 -- resin codes collapse to plastic (T1)
       HDPEM: plastic  # 1,028 -- HDPE milk bottles
     drops: []
+    # This source ships NO data.yaml/classes.txt, so the YOLO label class-index
+    # order is declared here. Verified 2026-06-14 by reading one label per class
+    # in YOLO_imgs/ (filenames encode the class): 0=AluCan 1=Glass 2=HDPEM 3=PET.
+    class_names: [AluCan, Glass, HDPEM, PET]
 
   - name: garbage-detection
     fetcher:
