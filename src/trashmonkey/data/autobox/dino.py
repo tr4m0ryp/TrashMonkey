@@ -56,7 +56,7 @@ def build_dino_backend(
     model = model.to(device).eval()
     text = _normalize_prompt(prompt)
 
-    def _post_process(outputs: object, input_ids: object, target_sizes: object) -> dict[str, object]:
+    def _post_process(outputs: object, input_ids: object, target_sizes: object) -> Any:
         # `box_threshold` was renamed to `threshold` in transformers >= 4.51;
         # try the current name first, fall back to the legacy one.
         fn = processor.post_process_grounded_object_detection
