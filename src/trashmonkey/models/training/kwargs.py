@@ -33,6 +33,7 @@ def build_train_kwargs(cfg: Config, data_yaml: Path) -> dict[str, Any]:
         "optimizer": train.optimizer,
         "lr0": train.lr0,
         "lrf": train.lrf,
+        "cos_lr": train.cos_lr,
         "momentum": train.momentum,
         "weight_decay": train.weight_decay,
         "warmup_epochs": train.warmup_epochs,
