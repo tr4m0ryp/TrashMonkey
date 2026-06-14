@@ -28,6 +28,7 @@ from trashmonkey.data.autobox import (
     PROVENANCE_FILENAME,
     BoxRecord,
     DinoPredictFn,
+    ProgressFn,
     box_directory,
     build_dino_backend,
 )
