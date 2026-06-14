@@ -37,6 +37,7 @@ _SOURCE_KEYS = frozenset(
         "mapping",
         "drops",
         "cap",
+        "class_names",
     }
 )
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
