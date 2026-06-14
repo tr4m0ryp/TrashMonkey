@@ -20,6 +20,7 @@ from trashmonkey.data.pipeline.context import PipelineContext, PipelineHalt, Sta
 from trashmonkey.data.pipeline.runner import run_pipeline
 from trashmonkey.data.pipeline.stages import build_stages
 from trashmonkey.utils.config import ConfigError, load_config
+from trashmonkey.utils.progress import ProgressSink
 from trashmonkey.utils.seed import set_seed
 
 DEFAULT_CONFIG = Path("configs/config.yaml")
