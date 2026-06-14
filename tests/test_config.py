@@ -53,6 +53,7 @@ def test_train_section(config: Config) -> None:
     assert (t.lr0, t.lrf, t.momentum, t.weight_decay) == (0.001, 0.01, 0.9, 0.0005)
     assert (t.warmup_epochs, t.patience, t.close_mosaic) == (3.0, 50, 10)
     assert (t.cache, t.amp, t.deterministic, t.freeze, t.workers) == ("disk", True, True, None, 8)
+    assert t.cos_lr is False
 
 
 def test_augment_native_args(config: Config) -> None:
