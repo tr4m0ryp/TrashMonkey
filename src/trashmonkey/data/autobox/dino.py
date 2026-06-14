@@ -87,8 +87,8 @@ def build_dino_backend(
         with torch.no_grad():
             outputs = model(**inputs)
         result = _post_process(outputs, inputs["input_ids"], [(height, width)])
-        boxes = result["boxes"].tolist()  # type: ignore[attr-defined]
-        scores = result["scores"].tolist()  # type: ignore[attr-defined]
+        boxes = result["boxes"].tolist()
+        scores = result["scores"].tolist()
         return [
             Detection(xyxy=(float(b[0]), float(b[1]), float(b[2]), float(b[3])), confidence=float(s))
             for b, s in zip(boxes, scores, strict=True)
