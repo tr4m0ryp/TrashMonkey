@@ -78,11 +78,22 @@ def dump_detections(
     out: IO[str],
     *,
     conf: float,
+    imgsz: int = 640,
+    batch: int = 16,
 ) -> int:
-    """Predict over ``images`` and append one JSONL line per detection."""
+    """Predict over ``images`` and append one JSONL line per detection.
+
+    ``imgsz``/``batch`` are pinned so the predictor does not inherit a large
+    batch from a preceding val() pass and OOM on a full-list forward.
+    """
     written = 0
     results = model.predict(
-        source=[str(p) for p in images], conf=conf, stream=True, verbose=False
+        source=[str(p) for p in images],
+        conf=conf,
+        stream=True,
+        verbose=False,
+        imgsz=imgsz,
+        batch=batch,
     )
     for result in results:
         image_id, object_id = image_identity(index, Path(str(result.path)))
