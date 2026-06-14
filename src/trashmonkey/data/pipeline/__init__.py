@@ -8,6 +8,7 @@ unless --force. Entry point: ``python -m trashmonkey.data.pipeline run``
 (wired to ``make repro``). Public surface re-exported here.
 """
 
+from trashmonkey.data.pipeline.build import build_dataset
 from trashmonkey.data.pipeline.cli import build_context, main
 from trashmonkey.data.pipeline.context import (
     PipelineContext,
@@ -23,6 +24,7 @@ __all__ = [
     "Stage",
     "StageError",
     "build_context",
+    "build_dataset",
     "build_stages",
     "main",
     "run_pipeline",
