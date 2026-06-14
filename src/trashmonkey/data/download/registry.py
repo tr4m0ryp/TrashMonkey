@@ -138,6 +138,27 @@ def _parse_drops(raw: Any, mapping: dict[str, str], context: str) -> tuple[str, 
     return tuple(raw)
 
 
+def _parse_class_names(
+    raw: Any, mapping: dict[str, str], drops: tuple[str, ...], context: str
+) -> tuple[str, ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, list) or not raw or not all(isinstance(x, str) and x.strip() for x in raw):
+        raise _fail(context, f"'class_names' must be a non-empty list of non-empty strings, got {raw!r}")
+    lowered = [n.lower() for n in raw]
+    if len(set(lowered)) != len(lowered):
+        raise _fail(context, f"'class_names' has case-insensitive duplicates: {raw!r}")
+    known = {label.lower() for label in mapping} | {d.lower() for d in drops}
+    unknown = [n for n in raw if n.lower() not in known]
+    if unknown:
+        raise _fail(
+            context,
+            f"class_names {unknown} are not labels of this source "
+            f"(mapping/drops: {sorted(known)})",
+        )
+    return tuple(raw)
+
+
 def _parse_cap(raw: Any, targets: frozenset[str], context: str) -> dict[str, int]:
     if raw is None:
         return {}
