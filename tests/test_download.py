@@ -88,6 +88,17 @@ def test_dominant_sources_carry_per_class_caps() -> None:
     assert registry["drinking-waste"].cap == {}
 
 
+def test_class_names_parse_and_real_registry() -> None:
+    spec = parse_source(raw_entry(annotation_type="det", class_names=["bottle", "junk"]), TARGET_CLASSES)
+    assert spec.class_names == ("bottle", "junk")
+    assert parse_source(raw_entry(), TARGET_CLASSES).class_names == ()  # cls default
+    registry = load_registry(REPO_ROOT / "configs" / "datasets.yaml", TARGET_CLASSES)
+    # drinking-waste ships no data.yaml -> the index order is pinned in the registry.
+    assert registry["drinking-waste"].class_names == ("AluCan", "Glass", "HDPEM", "PET")
+    # garbage-detection ships its own data.yaml -> no explicit names needed.
+    assert registry["garbage-detection"].class_names == ()
+
+
 def test_unknown_source_key_rejected_with_key_name() -> None:
     with pytest.raises(DatasetConfigError, match="unknown key 'flavor'"):
         parse_source(raw_entry(flavor="spicy"), TARGET_CLASSES)
