@@ -39,6 +39,21 @@ REPORT_FILENAME = "eval_report.yaml"
 DETECTIONS_FILENAME = "detections.jsonl"
 
 
+def _free_gpu() -> None:
+    """Release cached CUDA memory between passes (7 val() runs + the dumps leave
+    the reserved pool fragmented, OOMing the final dump on a 40GB card)."""
+    import gc
+
+    gc.collect()
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except ImportError:
+        pass
+
+
 def _run_val(
     model: Any, data_yaml: Path, split: str, cfg: Config, out_dir: Path, name: str
 ) -> Any:
