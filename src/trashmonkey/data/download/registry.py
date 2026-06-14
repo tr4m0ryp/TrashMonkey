@@ -189,6 +189,7 @@ def parse_source(raw: Any, target_classes: Collection[str]) -> SourceSpec:
     if background not in BACKGROUNDS:
         raise _fail(context, f"background '{background}' not in {sorted(BACKGROUNDS)}")
     mapping = _parse_mapping(raw.get("mapping"), targets, context)
+    drops = _parse_drops(raw.get("drops"), mapping, context)
     return SourceSpec(
         name=name,
         fetcher=_parse_fetcher(raw.get("fetcher"), context),
@@ -197,8 +198,9 @@ def parse_source(raw: Any, target_classes: Collection[str]) -> SourceSpec:
         annotation_type=annotation_type,
         background=background,
         mapping=mapping,
-        drops=_parse_drops(raw.get("drops"), mapping, context),
+        drops=drops,
         cap=_parse_cap(raw.get("cap"), targets, context),
+        class_names=_parse_class_names(raw.get("class_names"), mapping, drops, context),
     )
 
 
