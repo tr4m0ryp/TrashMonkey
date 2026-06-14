@@ -149,15 +149,28 @@ def _autobox_run(ctx: PipelineContext) -> str:
         name for name, spec in ctx.registry.items() if spec.annotation_type == "cls"
     )
     ctx.autobox_root.mkdir(parents=True, exist_ok=True)
+
+    # One cumulative percentage across the whole stage (the long pole of the
+    # build): grand total = every cls-source image plus the wilderness pool.
+    grand_total = sum(
+        _class_image_count(ctx, class_name, cls_sources) for class_name in ctx.cfg.classes
+    ) + len(_images(ctx.wilderness_root))
+    done = {"n": 0}
+
+    def on_image(_done: int, _total: int, _path: Path) -> None:
+        done["n"] += 1
+        if ctx.progress is not None and grand_total:
+            ctx.progress("autobox", done["n"], grand_total)
+
     groups: dict[str, int] = {}
     methods: dict[str, int] = {}
     for class_id, class_name in enumerate(ctx.cfg.classes):
-        records = _box_class(ctx, class_name, class_id, cls_sources)
+        records = _box_class(ctx, class_name, class_id, cls_sources, on_image)
         if records:
             groups[class_name] = len(records)
         for record in records:
             methods[record.method] = methods.get(record.method, 0) + 1
-    wild = _box_wilderness(ctx)
+    wild = _box_wilderness(ctx, on_image)
     if wild:
         groups[WILDERNESS_GROUP] = len(wild)
     for record in wild:
