@@ -25,10 +25,14 @@ from trashmonkey.utils.config import Config
 
 # (min_total_vram_gb, batch, workers). Ordered high -> low; first match wins.
 # The 0.0 tier is the pinned configs/config.yaml default (small GPU / CPU).
+# Thresholds sit BELOW each card's nominal RAM because torch reports usable GiB,
+# which is a few percent under the marketing GB: an A100-"40GB" reports ~39.5
+# GiB, L4-"24GB" ~23.6, T4-"16GB" ~15.6. The top cut is 38 (not 40) so the
+# A100-40 lands on batch 64 instead of slipping into the 48 tier.
 _TIERS: tuple[tuple[float, int, int], ...] = (
-    (40.0, 64, 16),  # A100-40 / A100-80 / H100-80
-    (20.0, 48, 12),  # L4 24GB
-    (14.0, 32, 8),   # T4 / G4 16GB
+    (38.0, 64, 16),  # A100-40 (~39.5 GiB) / A100-80 / H100-80
+    (20.0, 48, 12),  # L4 24GB (~23.6 GiB)
+    (14.0, 32, 8),   # T4 / G4 16GB (~15.6 GiB)
     (0.0, 16, 8),    # small GPU / CPU -> config.yaml default
 )
 
