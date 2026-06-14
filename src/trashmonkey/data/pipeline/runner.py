@@ -39,13 +39,16 @@ def run_pipeline(
     *,
     start: str | None = None,
     force: bool = False,
+    on_stage: Callable[[str, int, int], None] | None = None,
 ) -> dict[str, str]:
     """Run the stages in order; returns {stage name: 'ran' | 'skipped'}.
 
     `start` begins execution at the named stage (every earlier stage must
     already be complete); `force` re-runs every executed stage even when its
-    is_complete(ctx) is satisfied. PipelineHalt (the QA gate) propagates
-    untouched so the CLI can print the review-queue path.
+    is_complete(ctx) is satisfied. `on_stage(name, index, total)` fires as each
+    stage (1-based) is reached -- a coarse progress signal for the notebook.
+    PipelineHalt (the QA gate) propagates untouched so the CLI can print the
+    review-queue path.
     """
     names = [stage.name for stage in stages]
     if len(set(names)) != len(names):
@@ -53,17 +56,24 @@ def run_pipeline(
     if start is not None and start not in names:
         raise StageError(f"unknown stage '{start}'; stages in order: {', '.join(names)}")
     begin = 0 if start is None else names.index(start)
+    total = len(stages)
+
+    def announce(stage: Stage, index: int) -> None:
+        if on_stage is not None:
+            on_stage(stage.name, index, total)
 
     actions: dict[str, str] = {}
-    for stage in stages[:begin]:
+    for index, stage in enumerate(stages[:begin], start=1):
         if not stage.is_complete(ctx):
             raise StageError(
                 f"stage '{stage.name}' is not complete but precedes --stage {start}; "
                 f"run the pipeline without --stage first"
             )
+        announce(stage, index)
         actions[stage.name] = "skipped"
         logger.info("stage %s: skipped (complete, precedes --stage %s)", stage.name, start)
-    for stage in stages[begin:]:
+    for offset, stage in enumerate(stages[begin:]):
+        announce(stage, begin + offset + 1)
         if not force and stage.is_complete(ctx):
             actions[stage.name] = "skipped"
             logger.info("stage %s: skipped (already complete)", stage.name)
