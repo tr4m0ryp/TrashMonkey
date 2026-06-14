@@ -47,6 +47,10 @@ class TrainConfig:
     deterministic: bool
     freeze: int | None
     workers: int
+    # Cosine LR schedule toggle. False = the current linear decay to lr0*lrf.
+    # Exposed as a knob so a seed-fixed A/B can evaluate it before adoption;
+    # keep False until that A/B confirms a win (the recipe is otherwise pinned).
+    cos_lr: bool
 
 
 @dataclass(frozen=True)
