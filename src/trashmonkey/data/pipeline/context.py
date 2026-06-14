@@ -46,6 +46,9 @@ class PipelineContext:
     ack_review: bool = False
     dino_predict: DinoPredictFn | None = None
     birefnet_mask: MaskFn | None = None
+    # Optional per-item progress sink (label, current, total); the autobox stage
+    # drives it per image so the notebook can show a percentage during the build.
+    progress: ProgressSink | None = None
 
     @property
     def raw_root(self) -> Path:
