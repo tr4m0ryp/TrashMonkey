@@ -116,7 +116,7 @@ def _box_class(
     return records
 
 
-def _box_wilderness(ctx: PipelineContext) -> list[BoxRecord]:
+def _box_wilderness(ctx: PipelineContext, on_image: ProgressFn | None = None) -> list[BoxRecord]:
     images = _images(ctx.wilderness_root)
     if not images:
         return []
@@ -135,6 +135,7 @@ def _box_wilderness(ctx: PipelineContext) -> list[BoxRecord]:
         source=WILDERNESS_GROUP,
         dino_predict=dino,
         birefnet_mask=ctx.birefnet_mask,
+        progress=on_image,
     )
     for image in images:
         shutil.copy2(out_dir / f"{image.stem}.txt", image.with_suffix(".txt"))
