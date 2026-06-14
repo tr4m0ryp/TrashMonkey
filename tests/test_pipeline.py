@@ -165,6 +165,30 @@ def test_stages_run_in_declared_order(ctx: PipelineContext) -> None:
     assert actions == {"a": "ran", "b": "ran", "c": "ran"}
 
 
+def test_on_stage_fires_once_per_stage_in_order(ctx: PipelineContext) -> None:
+    log: list[str] = []
+    done: set[str] = set()
+    stages = [fake_stage(n, log, done) for n in ("a", "b", "c")]
+    seen: list[tuple[str, int, int]] = []
+    run_pipeline(stages, ctx, on_stage=lambda name, i, total: seen.append((name, i, total)))
+    assert seen == [("a", 1, 3), ("b", 2, 3), ("c", 3, 3)]
+
+
+def test_autobox_reports_cumulative_per_image_progress(ctx: PipelineContext) -> None:
+    # Fixture cls images: alpha {plastic x2, paper, cardboard, metal} + beta
+    # {glass, organic} = 7, plus one DROP image in the wilderness pool = 8.
+    seen: list[tuple[str, int, int]] = []
+    ctx2 = dataclasses.replace(
+        ctx, progress=lambda label, cur, total: seen.append((label, cur, total))
+    )
+    for stage_name in ("download", "remap", "autobox"):
+        next(s for s in build_stages() if s.name == stage_name).run(ctx2)
+    assert seen, "autobox reported no progress"
+    assert {label for label, _, _ in seen} == {"autobox"}
+    assert {total for _, _, total in seen} == {8}
+    assert [cur for _, cur, _ in seen] == list(range(1, 9))  # cumulative 1..8
+
+
 def test_resume_skips_completed_stages(ctx: PipelineContext) -> None:
     log: list[str] = []
     done = {"a", "b"}  # stages 1-2 already complete
