@@ -42,6 +42,8 @@ data/raw/*
 data/interim/*
 data/processed/*
 data/external/*
+data/cache/
+data/.dataset.fingerprint
 !data/**/.gitkeep
 models/*
 !models/.gitkeep
