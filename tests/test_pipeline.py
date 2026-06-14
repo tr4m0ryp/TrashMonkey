@@ -174,6 +174,46 @@ def test_on_stage_fires_once_per_stage_in_order(ctx: PipelineContext) -> None:
     assert seen == [("a", 1, 3), ("b", 2, 3), ("c", 3, 3)]
 
 
+def _run_through_autobox(ctx: PipelineContext) -> None:
+    for stage_name in ("download", "remap", "autobox"):
+        next(s for s in build_stages() if s.name == stage_name).run(ctx)
+
+
+def test_autobox_resumes_from_checkpoints_when_manifest_absent(ctx: PipelineContext) -> None:
+    calls = {"n": 0}
+
+    def counting_dino(path: Path) -> list[Detection]:
+        calls["n"] += 1
+        return fake_dino(path)
+
+    ctx2 = dataclasses.replace(ctx, dino_predict=counting_dino)
+    _run_through_autobox(ctx2)
+    first = calls["n"]
+    assert first == 8  # 7 cls images + 1 wilderness, boxed once
+
+    # Simulate a crash AFTER the groups checkpointed but before the next run:
+    # drop the stage manifest, keep the per-group checkpoints.
+    ctx2.manifest_path("autobox").unlink()
+    next(s for s in build_stages() if s.name == "autobox").run(ctx2)
+    assert calls["n"] == first  # every group loaded from checkpoint, none re-boxed
+    assert ctx2.manifest_path("autobox").is_file()  # manifest rebuilt
+
+
+def test_autobox_force_rerun_reboxes_when_manifest_present(ctx: PipelineContext) -> None:
+    calls = {"n": 0}
+
+    def counting_dino(path: Path) -> list[Detection]:
+        calls["n"] += 1
+        return fake_dino(path)
+
+    ctx2 = dataclasses.replace(ctx, dino_predict=counting_dino)
+    _run_through_autobox(ctx2)
+    first = calls["n"]
+    # Manifest present -> a direct re-run is a forced re-box (checkpoints dropped).
+    next(s for s in build_stages() if s.name == "autobox").run(ctx2)
+    assert calls["n"] == 2 * first
+
+
 def test_autobox_reports_cumulative_per_image_progress(ctx: PipelineContext) -> None:
     # Fixture cls images: alpha {plastic x2, paper, cardboard, metal} + beta
     # {glass, organic} = 7, plus one DROP image in the wilderness pool = 8.
