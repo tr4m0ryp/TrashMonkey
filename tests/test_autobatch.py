@@ -37,8 +37,9 @@ def test_tier_batch_is_deterministic(vram_gb: float, expected_batch: int) -> Non
 
 def test_batch_never_exceeds_nominal_batch_size() -> None:
     # batch must stay <= nbs (64) so accumulate=1 and the recipe is preserved.
-    for floor, batch, _workers in [(80.0, 64, 16)] + [(v, *_select(v, 64)) for v in (40, 24, 16, 0)]:
-        assert batch <= 64, f"vram tier {floor} resolved batch {batch} > nbs"
+    for vram in (80.0, 40.0, 24.0, 16.0, 0.0):
+        batch, _workers = _select(vram, cpu_count=64)
+        assert batch <= 64, f"vram {vram} resolved batch {batch} > nbs"
 
 
 def test_workers_clamped_to_cpu_count() -> None:
