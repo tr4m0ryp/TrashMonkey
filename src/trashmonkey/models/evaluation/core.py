@@ -140,8 +140,10 @@ def evaluate(
 
     val_results = _run_val(model, data_yaml, "val", cfg, out_dir, "val")
     val_tier = _tier_report(val_results, "val", "val", CLEAN_SEVERITY, out_dir)
+    _free_gpu()
     test1_results = _run_val(model, data_yaml, "test", cfg, out_dir, "test1")
     test1_tier = _tier_report(test1_results, "test1", "test", CLEAN_SEVERITY, out_dir)
+    _free_gpu()
 
     test2_tiers: list[TierReport] = []
     severity_yamls: dict[int, Path] = {}
@@ -154,6 +156,7 @@ def evaluate(
         tier = f"test2_s{severity}"
         results = _run_val(model, severity_yaml, "test", cfg, out_dir, tier)
         test2_tiers.append(_tier_report(results, tier, "test", severity, out_dir))
+        _free_gpu()
     severity_curve = tuple(
         SeverityPoint(severity=t.severity, map50=t.map50, map50_95=t.map50_95)
         for t in test2_tiers
