@@ -28,7 +28,7 @@ from trashmonkey.data.autobox import (
     yolo_line,
 )
 
-HAS_AUTODISTILL = importlib.util.find_spec("autodistill") is not None
+HAS_TRANSFORMERS = importlib.util.find_spec("transformers") is not None
 HAS_REMBG = importlib.util.find_spec("rembg") is not None
 
 
