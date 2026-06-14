@@ -199,6 +199,18 @@ sources:
       clothing: DROP  # textile -- non-sortable, open-set probe pool (T1/T9)
       shoes: DROP     # textile/mixed -- non-sortable, open-set probe pool
     drops: [clothing, shoes]
+    # Per-source per-class caps (T4): see garbage-detection above. This source
+    # is the largest contributor -- many studio categories collapse onto one
+    # target class (12 plastic categories x 500 = 6000 plastic alone), and those
+    # within-category studio shots are highly self-similar. Capped to half the
+    # global budget so a class is not flooded by near-duplicate studio frames.
+    # organic omitted (minority class -- keep its full pool).
+    cap:
+      plastic: 750
+      paper: 750
+      cardboard: 750
+      metal: 750
+      glass: 750
 
   - name: realwaste
     fetcher:
