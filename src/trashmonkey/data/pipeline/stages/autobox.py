@@ -64,8 +64,21 @@ def _write_provenance(path: Path, records: list[BoxRecord], image_dir: Path) -> 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _class_image_count(ctx: PipelineContext, class_name: str, cls_sources: frozenset[str]) -> int:
+    """How many cls-source images this class contributes (for progress totals)."""
+    return sum(
+        1
+        for image in _images(ctx.remapped_root / class_name)
+        if image.name.split("__", 1)[0] in cls_sources
+    )
+
+
 def _box_class(
-    ctx: PipelineContext, class_name: str, class_id: int, cls_sources: frozenset[str]
+    ctx: PipelineContext,
+    class_name: str,
+    class_id: int,
+    cls_sources: frozenset[str],
+    on_image: ProgressFn | None = None,
 ) -> list[BoxRecord]:
     class_dir = ctx.remapped_root / class_name
     by_source: dict[str, list[Path]] = {}
@@ -92,6 +105,7 @@ def _box_class(
                 source=source,
                 dino_predict=ctx.dino_predict,
                 birefnet_mask=ctx.birefnet_mask,
+                progress=on_image,
             )
         )
     shutil.rmtree(staging_root)
