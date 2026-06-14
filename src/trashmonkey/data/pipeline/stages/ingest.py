@@ -43,8 +43,18 @@ def _remap_complete(ctx: PipelineContext) -> bool:
 
 
 def _remap_run(ctx: PipelineContext) -> str:
+    # Detection sources without a shipped data.yaml/classes.txt declare their
+    # class-index order in the registry (class_names); pass it through so remap
+    # never has to guess the YOLO label order.
+    explicit_names = {
+        name: spec.class_names for name, spec in ctx.registry.items() if spec.class_names
+    }
     manifests = remap_sources(
-        ctx.registry.values(), ctx.raw_root, ctx.interim_root, list(ctx.cfg.classes)
+        ctx.registry.values(),
+        ctx.raw_root,
+        ctx.interim_root,
+        list(ctx.cfg.classes),
+        names=explicit_names or None,
     )
     images = sum(sum(manifest.class_counts.values()) for manifest in manifests)
     drops = sum(manifest.drop_count for manifest in manifests)
