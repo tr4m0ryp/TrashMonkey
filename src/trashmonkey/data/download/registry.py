@@ -65,6 +65,10 @@ class SourceSpec:
     mapping: dict[str, str]
     drops: tuple[str, ...] = ()
     cap: dict[str, int] = field(default_factory=dict)
+    # Detection-source class-index order (index i -> this label), for sources
+    # whose YOLO labels ship no data.yaml/classes.txt. Empty for cls sources or
+    # det sources that carry their own names file.
+    class_names: tuple[str, ...] = ()
 
     def dropped_labels(self) -> frozenset[str]:
         """Source labels excluded from training (mapping DROPs union `drops`)."""
