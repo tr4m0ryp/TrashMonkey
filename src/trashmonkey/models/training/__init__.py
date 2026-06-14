@@ -4,6 +4,11 @@ Public surface re-exported here; ``trashmonkey.models.train`` is the
 thin CLI module on top of this package.
 """
 
+from trashmonkey.models.training.autobatch import (
+    RuntimeProfile,
+    apply_runtime,
+    detect_runtime,
+)
 from trashmonkey.models.training.core import (
     DEFAULT_RUNS_JSONL,
     RunResult,
