@@ -288,7 +288,7 @@ def test_prompts_cover_all_six_classes() -> None:
     assert sorted(PROMPTS) == ["cardboard", "glass", "metal", "organic", "paper", "plastic"]
 
 
-@pytest.mark.skipif(HAS_AUTODISTILL, reason="autodistill installed; would load real weights")
+@pytest.mark.skipif(HAS_TRANSFORMERS, reason="transformers installed; would load real weights")
 def test_dino_backend_import_error_names_extra() -> None:
     with pytest.raises(ImportError, match="boxing"):
         build_dino_backend(PROMPTS["plastic"])
