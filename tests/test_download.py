@@ -75,6 +75,19 @@ def test_real_registry_loads_with_trashnet() -> None:
     assert set(spec.mapping.values()) == {"plastic", "paper", "cardboard", "metal", "glass", "DROP"}
 
 
+def test_dominant_sources_carry_per_class_caps() -> None:
+    # The two large sources cap their abundant classes at half the global
+    # budget; organic (minority class) is left uncapped on both.
+    registry = load_registry(REPO_ROOT / "configs" / "datasets.yaml", TARGET_CLASSES)
+    capped = {"plastic": 750, "paper": 750, "cardboard": 750, "metal": 750, "glass": 750}
+    for name in ("garbage-detection", "alistairking-household"):
+        assert registry[name].cap == capped, name
+        assert "organic" not in registry[name].cap, name
+    # The clean priority sources stay uncapped.
+    assert registry["trashnet"].cap == {}
+    assert registry["drinking-waste"].cap == {}
+
+
 def test_unknown_source_key_rejected_with_key_name() -> None:
     with pytest.raises(DatasetConfigError, match="unknown key 'flavor'"):
         parse_source(raw_entry(flavor="spicy"), TARGET_CLASSES)
