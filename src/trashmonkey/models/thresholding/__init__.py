@@ -12,6 +12,14 @@ from trashmonkey.models.thresholding.artifacts import (
     write_sweep_csv,
     write_thresholds_yaml,
 )
+from trashmonkey.models.thresholding.calibrate import (
+    CalibrationError,
+    Calibrator,
+    apply_temperature,
+    expected_calibration_error,
+    fit_temperature,
+    negative_log_likelihood,
+)
 from trashmonkey.models.thresholding.consensus import (
     REST,
     Decision,
@@ -50,6 +58,8 @@ __all__ = [
     "SWEEP_COLUMNS",
     "SWEEP_FILENAME",
     "THRESHOLDS_FILENAME",
+    "CalibrationError",
+    "Calibrator",
     "Decision",
     "Detection",
     "RestType",
@@ -58,9 +68,13 @@ __all__ = [
     "ThresholdParams",
     "TuneResult",
     "Vote",
+    "apply_temperature",
     "build_sightings",
     "consensus_decision",
     "evaluate_cell",
+    "expected_calibration_error",
+    "fit_temperature",
+    "negative_log_likelihood",
     "load_detections",
     "pareto_front",
     "per_class_tau",
