@@ -27,6 +27,7 @@ from trashmonkey.data.autobox import (
     mask_to_box,
     yolo_line,
 )
+from trashmonkey.data.autobox.types import DEFAULT_BOX_ORDER
 
 HAS_TRANSFORMERS = importlib.util.find_spec("transformers") is not None
 HAS_REMBG = importlib.util.find_spec("rembg") is not None
@@ -54,6 +55,10 @@ def fake_mask(by_name: dict[str, npt.NDArray[np.uint8]]) -> MaskFn:
 
 def fail_mask(image_path: Path) -> npt.NDArray[np.uint8]:
     raise AssertionError(f"mask backend must not be called for {image_path}")
+
+
+def fail_dino(image_path: Path) -> Sequence[Detection]:
+    raise AssertionError(f"dino backend must not be called for {image_path}")
 
 
 def blob_mask(height: int, width: int, rows: slice, cols: slice) -> npt.NDArray[np.uint8]:
@@ -189,6 +194,88 @@ def test_fallback_when_all_detections_below_threshold(tmp_path: Path) -> None:
     )
     assert record.method == "birefnet"
     assert record.flags == []  # multibox never set on the fallback path
+
+
+# --- per-source method order --------------------------------------------------
+
+
+def test_default_box_order_is_dino_first() -> None:
+    assert DEFAULT_BOX_ORDER == ("dino", "birefnet", "centerbox")
+
+
+def test_no_box_order_reproduces_dino_first(tmp_path: Path) -> None:
+    """A source without box_order must behave exactly as the legacy chain:
+    DINO is attempted first and a clean hit never touches the segmenter."""
+    images = tmp_path / "imgs"
+    images.mkdir()
+    make_image(images, "a.png", 200, 100)
+    (record,) = box_directory(
+        images,
+        3,
+        tmp_path / "labels",
+        class_name="metal",
+        source="trashnet",
+        dino_predict=fake_dino({"a.png": [Detection((50.0, 20.0, 150.0, 80.0), 0.9)]}),
+        birefnet_mask=fail_mask,  # must NOT be called when DINO wins first
+    )
+    assert record.method == "dino"
+    assert (tmp_path / "labels" / "a.txt").read_text() == "3 0.500000 0.500000 0.500000 0.600000\n"
+
+
+def test_birefnet_first_order_segments_before_dino(tmp_path: Path) -> None:
+    """box_order=[birefnet,dino,centerbox] attempts the segmenter first; a clean
+    birefnet hit never builds/queries the DINO backend (lazy-build invariant)."""
+    images = tmp_path / "imgs"
+    images.mkdir()
+    make_image(images, "a.png", 100, 80)
+    mask = blob_mask(80, 100, slice(20, 60), slice(10, 50))  # 20% of image -> accepted
+    (record,) = box_directory(
+        images,
+        2,
+        tmp_path / "labels",
+        class_name="cardboard",
+        source="trashnet",
+        box_order=["birefnet", "dino", "centerbox"],
+        dino_predict=fail_dino,  # must NOT be called when birefnet wins first
+        birefnet_mask=fake_mask({"a.png": mask}),
+    )
+    assert record.method == "birefnet"
+    assert record.confidence is None
+    # rect (10,20)-(50,60) in 100x80: cx=0.3, cy=0.5, w=0.4, h=0.5
+    assert (tmp_path / "labels" / "a.txt").read_text() == "2 0.300000 0.500000 0.400000 0.500000\n"
+
+
+def test_birefnet_first_falls_through_to_dino_then_centerbox(tmp_path: Path) -> None:
+    """Under birefnet-first order: a rejected mask falls through to DINO; an
+    empty DINO then lands on the terminal center box (always last)."""
+    images = tmp_path / "imgs"
+    images.mkdir()
+    make_image(images, "hit.png", 200, 100)
+    make_image(images, "miss.png", 200, 100)
+    # hit.png: mask rejected (too small) -> DINO accepts.
+    # miss.png: mask rejected AND DINO empty -> center box.
+    masks = {
+        "hit.png": blob_mask(100, 200, slice(0, 3), slice(0, 3)),
+        "miss.png": np.zeros((100, 200), dtype=np.uint8),
+    }
+    dets = {
+        "hit.png": [Detection((50.0, 20.0, 150.0, 80.0), 0.9)],
+        "miss.png": [],
+    }
+    records = box_directory(
+        images,
+        5,
+        tmp_path / "labels",
+        class_name="organic",
+        source="trashnet",
+        box_order=["birefnet", "dino", "centerbox"],
+        dino_predict=fake_dino(dets),
+        birefnet_mask=fake_mask(masks),
+    )
+    by_image = {r.image: r for r in records}
+    assert by_image["hit.png"].method == "dino"
+    assert by_image["miss.png"].method == "centerbox"
+    assert by_image["miss.png"].flags == ["centerbox"]
 
 
 @pytest.mark.parametrize("mask_kind", ["empty", "tiny", "full"])

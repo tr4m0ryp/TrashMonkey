@@ -1,4 +1,8 @@
-"""Auto-boxing chain (T3): Grounding DINO -> BiRefNet rect -> center box.
+"""Auto-boxing chain (T3): an ordered method chain ending in a center box.
+
+The attempt order is configurable per source (`box_order`); the default is
+Grounding DINO -> BiRefNet rect -> center box. Each method is tried in turn
+until one yields a box, and the center box is always the terminal fallback.
 
 One YOLO txt label per image plus a provenance JSONL. The class ID comes from
 the source mapping, never from the detector.
@@ -6,6 +10,7 @@ the source mapping, never from the detector.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from PIL import Image
@@ -15,6 +20,7 @@ from trashmonkey.data.autobox.dino import build_dino_backend
 from trashmonkey.data.autobox.geometry import center_box, mask_to_box, yolo_line
 from trashmonkey.data.autobox.types import (
     CENTER_BOX_MARGIN,
+    DEFAULT_BOX_ORDER,
     MASK_MAX_AREA_FRAC,
     MASK_MIN_AREA_FRAC,
     MIN_BOX_CONFIDENCE,
@@ -30,35 +36,84 @@ from trashmonkey.data.autobox.types import (
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
 PROVENANCE_FILENAME = "provenance.jsonl"
 
+# A box attempt returns (box, confidence, flags) or None to fall through.
+_Attempt = tuple[XYXY, float | None, list[str]] | None
+
+
+def _try_dino(
+    image_path: Path,
+    *,
+    get_dino: Callable[[], DinoPredictFn],
+    min_confidence: float,
+) -> _Attempt:
+    detections = list(get_dino()(image_path))
+    accepted = [d for d in detections if d.confidence >= min_confidence]
+    if not accepted:
+        return None
+    best = max(accepted, key=lambda d: d.confidence)
+    flags = ["multibox"] if len(detections) > 1 else []
+    return best.xyxy, best.confidence, flags
+
+
+def _try_birefnet(
+    image_path: Path,
+    width: int,
+    height: int,
+    *,
+    get_mask: Callable[[], MaskFn],
+    mask_min_frac: float,
+    mask_max_frac: float,
+) -> _Attempt:
+    mask = get_mask()(image_path)
+    if mask.shape != (height, width):
+        raise ValueError(
+            f"mask shape {mask.shape} does not match image {width}x{height}: {image_path}"
+        )
+    rect = mask_to_box(mask, min_area_frac=mask_min_frac, max_area_frac=mask_max_frac)
+    if rect is None:
+        return None
+    return rect, None, []
+
 
 def _resolve_box(
     image_path: Path,
     width: int,
     height: int,
     *,
-    dino_predict: DinoPredictFn,
-    birefnet_mask: MaskFn,
+    methods: Sequence[Method],
+    get_dino: Callable[[], DinoPredictFn],
+    get_mask: Callable[[], MaskFn],
     min_confidence: float,
     mask_min_frac: float,
     mask_max_frac: float,
     center_margin: float,
 ) -> tuple[XYXY, Method, float | None, list[str]]:
-    """Run the three-stage chain for one image."""
-    detections = list(dino_predict(image_path))
-    accepted = [d for d in detections if d.confidence >= min_confidence]
-    if accepted:
-        best = max(accepted, key=lambda d: d.confidence)
-        flags = ["multibox"] if len(detections) > 1 else []
-        return best.xyxy, "dino", best.confidence, flags
+    """Try each method in `methods` order; fall back to the center box.
 
-    mask = birefnet_mask(image_path)
-    if mask.shape != (height, width):
-        raise ValueError(
-            f"mask shape {mask.shape} does not match image {width}x{height}: {image_path}"
-        )
-    rect = mask_to_box(mask, min_area_frac=mask_min_frac, max_area_frac=mask_max_frac)
-    if rect is not None:
-        return rect, "birefnet", None, []
+    A backend builder (`get_dino` / `get_mask`) is invoked only when its method
+    is actually attempted, so e.g. a birefnet-first source that always succeeds
+    never builds the DINO backend. The center box is the terminal fallback
+    regardless of whether it appears in `methods`.
+    """
+    for method in methods:
+        if method == "centerbox":
+            continue  # handled below as the terminal fallback
+        if method == "dino":
+            attempt = _try_dino(
+                image_path, get_dino=get_dino, min_confidence=min_confidence
+            )
+        else:  # "birefnet"
+            attempt = _try_birefnet(
+                image_path,
+                width,
+                height,
+                get_mask=get_mask,
+                mask_min_frac=mask_min_frac,
+                mask_max_frac=mask_max_frac,
+            )
+        if attempt is not None:
+            box, confidence, flags = attempt
+            return box, method, confidence, flags
 
     return center_box(width, height, center_margin), "centerbox", None, ["centerbox"]
 
@@ -70,6 +125,7 @@ def box_directory(
     *,
     class_name: str,
     source: str,
+    box_order: Sequence[Method] | None = None,
     min_confidence: float = MIN_BOX_CONFIDENCE,
     mask_min_frac: float = MASK_MIN_AREA_FRAC,
     mask_max_frac: float = MASK_MAX_AREA_FRAC,
@@ -82,15 +138,19 @@ def box_directory(
 
     Writes one YOLO txt per image into `out_labels_dir` and a provenance JSONL
     (`provenance.jsonl`) alongside them; returns the provenance records.
-    `dino_predict` / `birefnet_mask` default to the real lazy backends (the
-    'boxing' extra); tests inject fakes. Backends are built only when first
-    needed, so the fallback model never loads if Grounding DINO covers all
-    images.
+    `box_order` sets the per-source method attempt order (a subset of
+    {dino, birefnet, centerbox}); falsy/None falls back to `DEFAULT_BOX_ORDER`
+    (dino -> birefnet -> centerbox), so any source without an explicit order
+    behaves exactly as before. `dino_predict` / `birefnet_mask` default to the
+    real lazy backends (the 'boxing' extra); tests inject fakes. A backend is
+    built only when its method is actually attempted, so a method never reached
+    (e.g. DINO under a birefnet-first source that always succeeds) never loads.
     """
     if class_name not in PROMPTS:
         raise ValueError(f"unknown class {class_name!r}; expected one of {sorted(PROMPTS)}")
     if not images_dir.is_dir():
         raise FileNotFoundError(f"images directory not found: {images_dir}")
+    methods: tuple[Method, ...] = tuple(box_order) if box_order else DEFAULT_BOX_ORDER
 
     images = sorted(p for p in images_dir.iterdir() if p.suffix.lower() in IMAGE_SUFFIXES)
     out_labels_dir.mkdir(parents=True, exist_ok=True)
@@ -117,9 +177,11 @@ def box_directory(
                 image_path,
                 width,
                 height,
-                dino_predict=get_dino(),
-                # Defer building the rembg backend until the fallback fires.
-                birefnet_mask=lambda p: get_mask()(p),
+                methods=methods,
+                # Builders are passed (not called) so each backend loads only
+                # when its method is actually attempted, in the configured order.
+                get_dino=get_dino,
+                get_mask=get_mask,
                 min_confidence=min_confidence,
                 mask_min_frac=mask_min_frac,
                 mask_max_frac=mask_max_frac,

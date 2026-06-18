@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 import io
+import json
 import zipfile
 from pathlib import Path
 
@@ -51,9 +52,13 @@ def make_zip(path: Path, members: dict[str, bytes]) -> None:
 
 
 def source_entry(
-    name: str, archive: Path, mapping: dict[str, str], drops: list[str]
+    name: str,
+    archive: Path,
+    mapping: dict[str, str],
+    drops: list[str],
+    box_order: list[str] | None = None,
 ) -> dict[str, object]:
-    return {
+    entry: dict[str, object] = {
         "name": name,
         "fetcher": {"kind": "local", "ref": str(archive), "sha256": None},
         "license": "MIT",
@@ -63,6 +68,9 @@ def source_entry(
         "mapping": mapping,
         "drops": drops,
     }
+    if box_order is not None:
+        entry["box_order"] = box_order
+    return entry
 
 
 def write_fixture(tmp_path: Path) -> Path:
@@ -227,6 +235,103 @@ def test_autobox_reports_cumulative_per_image_progress(ctx: PipelineContext) -> 
     assert {label for label, _, _ in seen} == {"autobox"}
     assert {total for _, _, total in seen} == {8}
     assert [cur for _, cur, _ in seen] == list(range(1, 9))  # cumulative 1..8
+
+
+def write_box_order_fixture(tmp_path: Path) -> Path:
+    """Like write_fixture but beta carries box_order=[birefnet,dino,centerbox]."""
+    archives = tmp_path / "archives"
+    archives.mkdir()
+    make_zip(
+        archives / "alpha.zip",
+        {
+            "bottle/a1.png": png_bytes(1),
+            "bottle/a2.png": png_bytes(2),
+            "sheet/a3.png": png_bytes(3),
+            "box/a4.png": png_bytes(4),
+            "can/a5.png": png_bytes(5),
+            "junk/a6.png": png_bytes(6),
+        },
+    )
+    make_zip(archives / "beta.zip", {"jar/b1.png": png_bytes(7), "peel/b2.png": png_bytes(8)})
+    datasets = {
+        "sources": [
+            source_entry(
+                "alpha",
+                archives / "alpha.zip",
+                {
+                    "bottle": "plastic",
+                    "sheet": "paper",
+                    "box": "cardboard",
+                    "can": "metal",
+                    "junk": "DROP",
+                },
+                ["junk"],
+            ),
+            source_entry(
+                "beta",
+                archives / "beta.zip",
+                {"jar": "glass", "peel": "organic"},
+                [],
+                box_order=["birefnet", "dino", "centerbox"],
+            ),
+        ]
+    }
+    raw_cfg = yaml.safe_load((REPO_ROOT / "configs" / "config.yaml").read_text())
+    raw_cfg["paths"] = {
+        key: str(tmp_path / "data" / key) for key in ("raw", "interim", "processed", "external")
+    } | {"models": str(tmp_path / "models"), "reports": str(tmp_path / "reports")}
+    raw_cfg["eval"]["leave_out_source"] = "beta"
+    raw_cfg["eval"]["val_fraction"] = 0.5
+    cfg_dir = tmp_path / "configs"
+    cfg_dir.mkdir()
+    (cfg_dir / "config.yaml").write_text(yaml.safe_dump(raw_cfg))
+    (cfg_dir / "datasets.yaml").write_text(yaml.safe_dump(datasets))
+    return cfg_dir / "config.yaml"
+
+
+def test_autobox_stage_threads_per_source_box_order(tmp_path: Path) -> None:
+    """beta (box_order=[birefnet,dino,centerbox]) segments first -- its images
+    are boxed by birefnet and DINO is never queried for them; alpha (no
+    box_order) keeps dino-first. The stage reads each source's order from the
+    registry and passes it to the chain."""
+    base = build_context(write_box_order_fixture(tmp_path))
+
+    dino_seen: list[str] = []
+
+    def recording_dino(image_path: Path) -> list[Detection]:
+        dino_seen.append(image_path.name)
+        return fake_dino(image_path)
+
+    def good_mask(image_path: Path) -> np.ndarray:
+        # A 50%-of-image centered blob: passes the area gates -> birefnet wins.
+        with Image.open(image_path) as img:
+            width, height = img.size
+        mask = np.zeros((height, width), dtype=np.uint8)
+        mask[height // 4 : 3 * height // 4, width // 4 : 3 * width // 4] = 255
+        return mask
+
+    ctx2 = dataclasses.replace(base, dino_predict=recording_dino, birefnet_mask=good_mask)
+    for stage_name in ("download", "remap", "autobox"):
+        next(s for s in build_stages() if s.name == stage_name).run(ctx2)
+
+    autobox_root = ctx2.interim_root / "autobox"
+    methods: dict[str, str] = {}
+    for class_name in ctx2.cfg.classes:
+        prov = autobox_root / class_name / "provenance.jsonl"
+        if not prov.is_file():
+            continue
+        for line in prov.read_text().splitlines():
+            rec = json.loads(line)
+            methods[Path(rec["image"]).name] = rec["method"]
+
+    # beta segments first: birefnet method, DINO never queried for its images.
+    # Remap names images <source>__<stem>; the class-name prefix is added later.
+    assert methods["beta__b1.png"] == "birefnet"
+    assert methods["beta__b2.png"] == "birefnet"
+    assert not any("beta__" in name for name in dino_seen)
+    # alpha keeps dino-first (fake_dino always returns a confident box).
+    assert methods["alpha__a1.png"] == "dino"
+    assert any("alpha__" in name for name in dino_seen)
 
 
 def test_resume_skips_completed_stages(ctx: PipelineContext) -> None:

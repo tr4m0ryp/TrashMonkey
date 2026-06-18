@@ -162,6 +162,8 @@ def _box_class(
                 out_dir,
                 class_name=class_name,
                 source=source,
+                # Per-source method order from the registry (() = pipeline default).
+                box_order=cast("tuple[Method, ...]", ctx.registry[source].box_order),
                 dino_predict=ctx.dino_predict,
                 birefnet_mask=ctx.birefnet_mask,
                 progress=on_image,

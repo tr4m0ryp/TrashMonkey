@@ -45,6 +45,11 @@ INSTALL_HINT: str = (
 
 Method = Literal["dino", "birefnet", "centerbox"]
 
+# Default attempt order when a source carries no explicit box_order: Grounding
+# DINO first, BiRefNet mask second, center box last. centerbox is always the
+# terminal fallback regardless of where (or whether) it appears in an order.
+DEFAULT_BOX_ORDER: tuple[Method, ...] = ("dino", "birefnet", "centerbox")
+
 # Pixel-space box, (x1, y1, x2, y2).
 XYXY = tuple[float, float, float, float]
 
