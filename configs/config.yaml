@@ -46,6 +46,7 @@ train:
   deterministic: true
   freeze: null
   workers: 8
+  cls_pw: 0.0          # ultralytics native inverse-freq class weighting; 0=off (flip via seed-fixed A/B)
 
 # T5 augmentation: native Ultralytics args plus an Albumentations stack that
 # simulates the ESP32-CAM OV2640 (JPEG blocking, sensor noise, WB drift, blur).
@@ -95,6 +96,24 @@ eval:
   val_fraction: 0.15
   leave_out_source: realwaste
   test2_severities: [1, 2, 3, 4, 5]
+  # Clean plain-background holdout (deployment distribution), carved seeded from
+  # these training sources -- distinct from the realwaste leave-one-source TEST-1.
+  clean_holdout:
+    fraction: 0.15
+    sources: [trashnet, drinking-waste, alistairking-household]
+  # Per-metric escalation floors (yolo11n -> yolo11s decision); replaces the old
+  # hard 0.95 floor. Escalate if overall or any per-class metric drops below.
+  escalation:
+    overall_map50: 0.80
+    class_map50: 0.70
+    class_recall: 0.70
+  # Auto-box quality gate: drops degenerate boxes before training. Fractions are
+  # box-area fractions of the image; drop_methods names boxers discarded outright.
+  label_filter:
+    min_confidence: 0.30
+    max_box_frac: 0.92
+    min_box_frac: 0.005
+    drop_methods: [centerbox]
 
 # T9 rest-bin consensus rule: permissive per-frame conf_floor, qualified votes
 # at tau_frame, min_votes + strict majority, high_water single-frame gate.

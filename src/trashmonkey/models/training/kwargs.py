@@ -47,6 +47,8 @@ def build_train_kwargs(cfg: Config, data_yaml: Path) -> dict[str, Any]:
         "seed": cfg.seed,
         "workers": train.workers,
         "freeze": train.freeze,
+        # Native inverse-frequency class weighting; 0.0 = off (recipe default).
+        "cls_pw": train.cls_pw,
         # T5 native Ultralytics augmentation args.
         "degrees": augment.degrees,
         "flipud": augment.flipud,

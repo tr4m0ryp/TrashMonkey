@@ -182,6 +182,7 @@ def test_train_kwargs_snapshot(cfg: Config) -> None:
         "seed": 42,
         "workers": 8,
         "freeze": None,
+        "cls_pw": 0.0,
         "degrees": 180.0,
         "flipud": 0.5,
         "fliplr": 0.5,

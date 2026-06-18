@@ -23,6 +23,8 @@ DROP = "DROP"
 FETCHER_KINDS = frozenset({"kaggle", "http", "local"})
 ANNOTATION_TYPES = frozenset({"cls", "det"})
 BACKGROUNDS = frozenset({"clean", "wild"})
+ROLES = frozenset({"train", "test_only"})
+BOX_METHODS = frozenset({"dino", "birefnet", "centerbox"})
 
 _TOP_KEYS = frozenset({"sources"})
 _FETCHER_KEYS = frozenset({"kind", "ref", "sha256"})
@@ -38,6 +40,8 @@ _SOURCE_KEYS = frozenset(
         "drops",
         "cap",
         "class_names",
+        "role",
+        "box_order",
     }
 )
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -69,6 +73,13 @@ class SourceSpec:
     # whose YOLO labels ship no data.yaml/classes.txt. Empty for cls sources or
     # det sources that carry their own names file.
     class_names: tuple[str, ...] = ()
+    # Pipeline role: "train" (default) feeds training; "test_only" is ingested
+    # but never trained on (e.g. a wild source kept purely for evaluation).
+    role: str = "train"
+    # Auto-box method order applied to this source's cls images (each method
+    # tried in turn until one yields a box). Empty = the pipeline default order.
+    # Members must be a subset of {dino, birefnet, centerbox}.
+    box_order: tuple[str, ...] = ()
 
     def dropped_labels(self) -> frozenset[str]:
         """Source labels excluded from training (mapping DROPs union `drops`)."""
@@ -174,6 +185,27 @@ def _parse_cap(raw: Any, targets: frozenset[str], context: str) -> dict[str, int
     return cap
 
 
+def _parse_role(raw: Any, context: str) -> str:
+    if raw is None:
+        return "train"
+    if not isinstance(raw, str) or raw not in ROLES:
+        raise _fail(context, f"'role' must be one of {sorted(ROLES)}, got {raw!r}")
+    return raw
+
+
+def _parse_box_order(raw: Any, context: str) -> tuple[str, ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, list) or not all(isinstance(x, str) for x in raw):
+        raise _fail(context, f"'box_order' must be a list of box-method names, got {raw!r}")
+    unknown = [m for m in raw if m not in BOX_METHODS]
+    if unknown:
+        raise _fail(context, f"box_order methods {unknown} not in {sorted(BOX_METHODS)}")
+    if len(set(raw)) != len(raw):
+        raise _fail(context, f"'box_order' has duplicate methods: {raw!r}")
+    return tuple(raw)
+
+
 def parse_source(raw: Any, target_classes: Collection[str]) -> SourceSpec:
     """Validate one raw registry entry; raise DatasetConfigError on any violation."""
     if not isinstance(raw, dict):
@@ -201,6 +233,8 @@ def parse_source(raw: Any, target_classes: Collection[str]) -> SourceSpec:
         drops=drops,
         cap=_parse_cap(raw.get("cap"), targets, context),
         class_names=_parse_class_names(raw.get("class_names"), mapping, drops, context),
+        role=_parse_role(raw.get("role"), context),
+        box_order=_parse_box_order(raw.get("box_order"), context),
     )
 
 

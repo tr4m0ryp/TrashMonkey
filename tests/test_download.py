@@ -99,6 +99,30 @@ def test_class_names_parse_and_real_registry() -> None:
     assert registry["garbage-detection"].class_names == ()
 
 
+def test_role_and_box_order_defaults_and_real_registry() -> None:
+    # Defaults are backward-compatible: role "train", empty box_order.
+    spec = parse_source(raw_entry(), TARGET_CLASSES)
+    assert spec.role == "train"
+    assert spec.box_order == ()
+    # Explicit values parse.
+    explicit = parse_source(
+        raw_entry(role="test_only", box_order=["birefnet", "dino", "centerbox"]),
+        TARGET_CLASSES,
+    )
+    assert explicit.role == "test_only"
+    assert explicit.box_order == ("birefnet", "dino", "centerbox")
+    # Real registry: garbage-detection is eval-only; the two clean cls sources
+    # carry an explicit box_order; the rest fall back to the pipeline default.
+    registry = load_registry(REPO_ROOT / "configs" / "datasets.yaml", TARGET_CLASSES)
+    assert registry["garbage-detection"].role == "test_only"
+    assert registry["trashnet"].role == "train"
+    assert registry["trashnet"].box_order == ("birefnet", "dino", "centerbox")
+    assert registry["alistairking-household"].box_order == ("birefnet", "dino", "centerbox")
+    assert registry["drinking-waste"].box_order == ()
+    assert registry["realwaste"].box_order == ()
+    assert registry["garbage-detection"].box_order == ()
+
+
 def test_unknown_source_key_rejected_with_key_name() -> None:
     with pytest.raises(DatasetConfigError, match="unknown key 'flavor'"):
         parse_source(raw_entry(flavor="spicy"), TARGET_CLASSES)
@@ -126,6 +150,9 @@ def test_unknown_fetcher_key_rejected_with_key_name() -> None:
         ({"class_names": ["bottle", "Bottle"]}, "case-insensitive duplicates"),
         ({"fetcher": {"kind": "local", "ref": "/x", "sha256": "beef"}}, "64 lowercase hex"),
         ({"license": ""}, "'license' must be a non-empty string"),
+        ({"role": "holdout"}, "'role' must be one of"),
+        ({"box_order": ["sam"]}, "not in"),
+        ({"box_order": ["dino", "dino"]}, "duplicate methods"),
     ],
 )
 def test_malformed_entries_rejected(overrides: dict[str, Any], match: str) -> None:

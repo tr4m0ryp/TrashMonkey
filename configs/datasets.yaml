@@ -78,6 +78,10 @@ sources:
       glass: glass         # 501
       trash: DROP          # 137 -- maps to none of the six target classes (F17)
     drops: [trash]
+    # cls source -> autobox each image. Try BiRefNet salient-object matting first
+    # (clean white posterboard => crisp foreground), then Grounding DINO, then the
+    # centerbox fallback.
+    box_order: [birefnet, dino, centerbox]
 
   - name: drinking-waste
     fetcher:
@@ -124,6 +128,9 @@ sources:
     # Roboflow aggregate of unknown provenance, mixed scenes (T2); pHash dedup
     # against earlier sources is load-bearing here (F20, T10).
     background: wild
+    # Wild aggregate off the plain-background deployment distribution -- ingested
+    # for evaluation only, never trained on (box_order left at the pipeline default).
+    role: test_only
     mapping:
       # Exact label spellings from the shipped data.yaml (verified 2026-06-10).
       PAPER: paper
@@ -168,6 +175,9 @@ sources:
     # Studio "default" split is clean single-object; real_world is also
     # single-object framing (T2).
     background: clean
+    # cls source -> autobox each image. Studio single-object frames matte cleanly,
+    # so BiRefNet first, then Grounding DINO, then the centerbox fallback.
+    box_order: [birefnet, dino, centerbox]
     mapping:
       # All 30 category folders enumerated via the Kaggle files API
       # (2026-06-10, 500 images each). Mapping is TOTAL over that list (T1):

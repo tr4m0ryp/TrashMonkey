@@ -51,6 +51,10 @@ class TrainConfig:
     # Exposed as a knob so a seed-fixed A/B can evaluate it before adoption;
     # keep False until that A/B confirms a win (the recipe is otherwise pinned).
     cos_lr: bool
+    # Ultralytics native inverse-frequency class weighting (its `cls_pw` train
+    # arg), range [0, 1]; 0.0 = OFF (current pinned behaviour). A seed-fixed A/B
+    # can raise it to up-weight minority classes (e.g. organic) before adoption.
+    cls_pw: float
 
 
 @dataclass(frozen=True)
@@ -123,12 +127,56 @@ class AugmentConfig:
 
 
 @dataclass(frozen=True)
+class CleanHoldoutConfig:
+    """Plain-background clean-presentation holdout carved from training sources.
+
+    ``fraction`` of each named source is held out (seeded, deterministic) as a
+    deployment-distribution test set distinct from the T6 leave-one-source-out
+    TEST-1. Consumed by a downstream task; unused until wired in.
+    """
+
+    fraction: float
+    sources: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class EscalationConfig:
+    """Per-metric floors gating the model-size escalation decision (yolo11n->s).
+
+    Replaces the old hard 0.95 floor: an escalation is triggered only when the
+    overall mAP50 or any per-class mAP50/recall falls below these thresholds.
+    """
+
+    overall_map50: float
+    class_map50: float
+    class_recall: float
+
+
+@dataclass(frozen=True)
+class LabelFilterConfig:
+    """Quality gate dropping degenerate auto-boxes before they enter training.
+
+    ``drop_methods`` names boxing methods whose outputs are discarded outright
+    (e.g. the centerbox fallback). The fractional bounds are box-area fractions
+    of the image. Consumed by a downstream task; defaults keep current behaviour.
+    """
+
+    min_confidence: float
+    max_box_frac: float
+    min_box_frac: float
+    drop_methods: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class EvalConfig:
     """T6 three-tier eval; null fields are filled after the dataset census."""
 
     val_fraction: float | None
     leave_out_source: str | None
     test2_severities: tuple[int, ...]
+    clean_holdout: CleanHoldoutConfig
+    escalation: EscalationConfig
+    label_filter: LabelFilterConfig
 
 
 @dataclass(frozen=True)

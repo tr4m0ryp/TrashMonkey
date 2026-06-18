@@ -54,6 +54,7 @@ def test_train_section(config: Config) -> None:
     assert (t.warmup_epochs, t.patience, t.close_mosaic) == (3.0, 50, 10)
     assert (t.cache, t.amp, t.deterministic, t.freeze, t.workers) == ("disk", True, True, None, 8)
     assert t.cos_lr is False
+    assert t.cls_pw == 0.0  # native class weighting OFF by default (backward-compatible)
 
 
 def test_augment_native_args(config: Config) -> None:
@@ -80,6 +81,24 @@ def test_eval_section(config: Config) -> None:
     assert config.eval.val_fraction == 0.15
     assert config.eval.leave_out_source == "realwaste"
     assert config.eval.test2_severities == (1, 2, 3, 4, 5)
+
+
+def test_eval_clean_holdout(config: Config) -> None:
+    ch = config.eval.clean_holdout
+    assert ch.fraction == 0.15
+    assert ch.sources == ("trashnet", "drinking-waste", "alistairking-household")
+
+
+def test_eval_escalation_floors(config: Config) -> None:
+    esc = config.eval.escalation
+    assert (esc.overall_map50, esc.class_map50, esc.class_recall) == (0.80, 0.70, 0.70)
+
+
+def test_eval_label_filter(config: Config) -> None:
+    lf = config.eval.label_filter
+    assert lf.min_confidence == 0.30
+    assert (lf.max_box_frac, lf.min_box_frac) == (0.92, 0.005)
+    assert lf.drop_methods == ("centerbox",)
 
 
 def test_thresholds_section(config: Config) -> None:

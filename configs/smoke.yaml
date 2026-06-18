@@ -57,6 +57,7 @@ train:
   deterministic: true
   freeze: null
   workers: 0
+  cls_pw: 0.0          # off (backward-compatible); smoke never exercises class weighting
 
 augment:
   degrees: 180
@@ -103,6 +104,22 @@ eval:
   val_fraction: 0.5
   leave_out_source: beta
   test2_severities: [1]
+  # alpha is the trained fixture source (beta is the leave-one-source holdout);
+  # a tiny clean holdout fraction exercises the carve path on the fixture pool.
+  clean_holdout:
+    fraction: 0.25
+    sources: [alpha]
+  # Same escalation floors as the real config (smoke uses the fake-results path).
+  escalation:
+    overall_map50: 0.80
+    class_map50: 0.70
+    class_recall: 0.70
+  # Label-filter defaults mirror config.yaml; smoke never feeds real auto-boxes.
+  label_filter:
+    min_confidence: 0.30
+    max_box_frac: 0.92
+    min_box_frac: 0.005
+    drop_methods: [centerbox]
 
 # Reduced 2x2x1 sweep grid; conf_floor relaxed to 0.05 so a 1-epoch CPU run
 # still dumps detections for the tuner on the real-model path.
