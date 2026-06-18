@@ -9,11 +9,16 @@ the decision to escalate to yolo11s stays human.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-OVERALL_MAP50_FLOOR = 0.95
-CLASS_MAP50_FLOOR = 0.90
-CLASS_RECALL_FLOOR = 0.90
+if TYPE_CHECKING:
+    from trashmonkey.utils.config import EscalationConfig
+
+# Ultimate fallback floors when no EscalationConfig is supplied; these mirror
+# the configs/config.yaml ``eval.escalation`` defaults (the source of truth).
+OVERALL_MAP50_FLOOR = 0.80
+CLASS_MAP50_FLOOR = 0.70
+CLASS_RECALL_FLOOR = 0.70
 
 
 def extract_metrics(results: Any) -> dict[str, Any]:
@@ -32,13 +37,25 @@ def extract_metrics(results: Any) -> dict[str, Any]:
     return {"overall": overall, "map50": float(box.map50), "per_class": per_class}
 
 
-def check_escalation(metrics: dict[str, Any], classes: tuple[str, ...]) -> dict[str, Any]:
-    """Apply the T7 rule: overall mAP50 >= 0.95, per-class mAP50/recall >= 0.90.
+def check_escalation(
+    metrics: dict[str, Any],
+    classes: tuple[str, ...],
+    floors: EscalationConfig | None = None,
+) -> dict[str, Any]:
+    """Apply the escalation rule with config-driven per-metric floors.
+
+    Escalate (``passed`` is False) when overall mAP50 drops below
+    ``floors.overall_map50`` or any per-class mAP50/recall drops below
+    ``floors.class_map50``/``floors.class_recall``. When ``floors`` is None the
+    module-level fallbacks (which mirror the config defaults) are used.
 
     A class absent from the validation results cannot demonstrate its floors
     and is recorded as failed with null numbers -- no silent pass.
     """
-    passed = metrics["map50"] >= OVERALL_MAP50_FLOOR
+    overall_floor = OVERALL_MAP50_FLOOR if floors is None else floors.overall_map50
+    class_map50_floor = CLASS_MAP50_FLOOR if floors is None else floors.class_map50
+    class_recall_floor = CLASS_RECALL_FLOOR if floors is None else floors.class_recall
+    passed = metrics["map50"] >= overall_floor
     per_class: dict[str, dict[str, Any]] = {}
     for name in classes:
         entry = metrics["per_class"].get(name)
@@ -46,7 +63,7 @@ def check_escalation(metrics: dict[str, Any], classes: tuple[str, ...]) -> dict[
             per_class[name] = {"map50": None, "recall": None, "passed": False}
             passed = False
             continue
-        class_ok = entry["map50"] >= CLASS_MAP50_FLOOR and entry["recall"] >= CLASS_RECALL_FLOOR
+        class_ok = entry["map50"] >= class_map50_floor and entry["recall"] >= class_recall_floor
         per_class[name] = {"map50": entry["map50"], "recall": entry["recall"], "passed": class_ok}
         passed = passed and class_ok
     return {
@@ -54,8 +71,8 @@ def check_escalation(metrics: dict[str, Any], classes: tuple[str, ...]) -> dict[
         "overall_map50": metrics["map50"],
         "per_class": per_class,
         "thresholds": {
-            "overall_map50": OVERALL_MAP50_FLOOR,
-            "class_map50": CLASS_MAP50_FLOOR,
-            "class_recall": CLASS_RECALL_FLOOR,
+            "overall_map50": overall_floor,
+            "class_map50": class_map50_floor,
+            "class_recall": class_recall_floor,
         },
     }

@@ -1,10 +1,14 @@
-"""evaluate(): the T6 three-tier evaluation of a trained checkpoint.
+"""evaluate(): the multi-tier evaluation of a trained checkpoint.
 
 Tier order: VAL (selection ceiling) -> TEST-1 (held-out source split) ->
-TEST-2 (degraded TEST-1 copies per severity, reported as a curve). Every val
-runs at ``conf=0.001`` for the full curve sweep; the T7 escalation check
-reuses ``models/training/escalation.py``. This module deliberately exposes NO
-tuning or selection hooks on TEST-1/TEST-2 -- both are report-only tiers.
+TEST-2 (degraded TEST-1 copies per severity, reported as a curve) -> CLEAN
+(the deployment-matched ``clean_test`` split, when present) -> WILD (the
+``wild_test`` stress split, when present). Every val runs at ``conf=0.001`` for
+the full curve sweep; the escalation check reuses
+``models/training/escalation.py`` and gates on the CLEAN tier (falling back to
+VAL when ``clean_test`` is absent, so old 3-split datasets still evaluate).
+This module deliberately exposes NO tuning or selection hooks on the test tiers
+-- they are report-only.
 """
 
 from __future__ import annotations
@@ -17,7 +21,11 @@ from trashmonkey.models.evaluation.curves import (
     extract_curves,
     save_curves,
 )
-from trashmonkey.models.evaluation.degraded import materialize_severity, split_images
+from trashmonkey.models.evaluation.degraded import (
+    load_dataset_spec,
+    materialize_severity,
+    split_images,
+)
 from trashmonkey.models.evaluation.detections import (
     dump_detections,
     load_manifest_index,
@@ -103,6 +111,24 @@ def _tier_report(
     )
 
 
+def _has_split(data_yaml: Path, split: str) -> bool:
+    """Whether ``data_yaml`` defines ``split`` (the emit only writes non-empty
+    splits, so presence of the key means the split has members)."""
+    return split in load_dataset_spec(data_yaml)
+
+
+def _headline(tier: TierReport) -> dict[str, Any]:
+    """CLEAN-tier (or VAL fallback) headline: mAP50 + per-class recall up front,
+    mAP50-95 kept as a secondary field."""
+    return {
+        "tier": tier.tier,
+        "split": tier.split,
+        "map50": tier.map50,
+        "per_class_recall": {name: c.recall for name, c in tier.per_class.items()},
+        "map50_95": tier.map50_95,
+    }
+
+
 def evaluate(
     cfg: Config,
     best_pt: Path,
@@ -162,7 +188,27 @@ def evaluate(
         for t in test2_tiers
     )
 
-    escalation = check_escalation(extract_metrics(val_results), cfg.classes)
+    # Deployment-matched CLEAN tier + in-the-wild stress tier, only when the
+    # emit wrote those splits (older 3-split datasets carry neither).
+    clean_tier: TierReport | None = None
+    clean_results: Any = None
+    if _has_split(data_yaml, "clean_test"):
+        clean_results = _run_val(model, data_yaml, "clean_test", cfg, out_dir, "clean")
+        clean_tier = _tier_report(clean_results, "clean", "clean_test", CLEAN_SEVERITY, out_dir)
+        _free_gpu()
+    wild_tier: TierReport | None = None
+    if _has_split(data_yaml, "wild_test"):
+        wild_results = _run_val(model, data_yaml, "wild_test", cfg, out_dir, "wild")
+        wild_tier = _tier_report(wild_results, "wild", "wild_test", CLEAN_SEVERITY, out_dir)
+        _free_gpu()
+
+    # The escalation gate reads the CLEAN tier (deployment distribution); when
+    # clean_test is absent it falls back to VAL so old runs still evaluate.
+    gate_results = clean_results if clean_results is not None else val_results
+    escalation = check_escalation(
+        extract_metrics(gate_results), cfg.classes, cfg.eval.escalation
+    )
+    headline = _headline(clean_tier if clean_tier is not None else val_tier)
 
     _free_gpu()  # reclaim the val/test fragmentation before the dump's predict
     detections_path = out_dir / DETECTIONS_FILENAME
@@ -188,6 +234,9 @@ def evaluate(
         severity_curve=severity_curve,
         escalation=escalation,
         detections_path=str(detections_path),
+        clean=clean_tier,
+        wild=wild_tier,
+        headline=headline,
     )
     report.write_yaml(out_dir / REPORT_FILENAME)
     return report

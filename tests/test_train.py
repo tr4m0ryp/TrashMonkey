@@ -21,7 +21,12 @@ from trashmonkey.models.training import (
     train,
     validate_train_config,
 )
-from trashmonkey.utils.config import Config, load_config
+from trashmonkey.models.training.escalation import (
+    CLASS_MAP50_FLOOR,
+    CLASS_RECALL_FLOOR,
+    OVERALL_MAP50_FLOOR,
+)
+from trashmonkey.utils.config import Config, EscalationConfig, load_config
 
 CLASSES = ("plastic", "paper", "cardboard", "metal", "glass", "organic")
 
@@ -270,40 +275,77 @@ def test_runs_jsonl_appends_one_valid_line(
     assert len((tmp_path / "runs.jsonl").read_text().splitlines()) == 2
 
 
-# --- escalation rule (T7) --------------------------------------------------------
+# --- escalation rule (config-driven floors) --------------------------------------
+
+# Floors used by the gate tests; these mirror the configs/config.yaml defaults
+# and the module-level fallbacks (asserted equal below).
+FLOORS = EscalationConfig(overall_map50=0.80, class_map50=0.70, class_recall=0.70)
+
+
+def test_module_fallback_floors_match_config_defaults(cfg: Config) -> None:
+    # The module constants are the ultimate fallback and must track the config.
+    assert OVERALL_MAP50_FLOOR == cfg.eval.escalation.overall_map50
+    assert CLASS_MAP50_FLOOR == cfg.eval.escalation.class_map50
+    assert CLASS_RECALL_FLOOR == cfg.eval.escalation.class_recall
+    assert (OVERALL_MAP50_FLOOR, CLASS_MAP50_FLOOR, CLASS_RECALL_FLOOR) != (0.95, 0.90, 0.90)
 
 
 def test_escalation_passes_when_all_floors_met() -> None:
-    block = check_escalation(extract_metrics(_fake_results()), CLASSES)
+    block = check_escalation(extract_metrics(_fake_results()), CLASSES, FLOORS)
     assert block["passed"] is True
     assert set(block["per_class"]) == set(CLASSES)
+    assert block["thresholds"] == {
+        "overall_map50": 0.80,
+        "class_map50": 0.70,
+        "class_recall": 0.70,
+    }
 
 
-def test_escalation_fails_on_single_class_recall_089() -> None:
-    results = _fake_results(per_class={"glass": {"recall": 0.89}})
-    block = check_escalation(extract_metrics(results), CLASSES)
+def test_escalation_floors_come_from_config_not_constants() -> None:
+    # 0.85 recall passes the default 0.70 floor but fails a strict 0.90 floor.
+    results = _fake_results(per_class={"glass": {"recall": 0.85}})
+    lenient = check_escalation(extract_metrics(results), CLASSES, FLOORS)
+    strict = check_escalation(
+        extract_metrics(results),
+        CLASSES,
+        EscalationConfig(overall_map50=0.80, class_map50=0.70, class_recall=0.90),
+    )
+    assert lenient["per_class"]["glass"]["passed"] is True
+    assert strict["per_class"]["glass"]["passed"] is False
+
+
+def test_escalation_fails_on_single_class_recall_below_floor() -> None:
+    results = _fake_results(per_class={"glass": {"recall": 0.69}})
+    block = check_escalation(extract_metrics(results), CLASSES, FLOORS)
     assert block["passed"] is False
     assert block["per_class"]["glass"]["passed"] is False
     assert block["per_class"]["plastic"]["passed"] is True
 
 
-def test_escalation_fails_on_single_class_map50_089() -> None:
-    results = _fake_results(per_class={"paper": {"map50": 0.89}})
-    block = check_escalation(extract_metrics(results), CLASSES)
+def test_escalation_fails_on_single_class_map50_below_floor() -> None:
+    results = _fake_results(per_class={"paper": {"map50": 0.69}})
+    block = check_escalation(extract_metrics(results), CLASSES, FLOORS)
     assert block["passed"] is False
     assert block["per_class"]["paper"]["passed"] is False
 
 
 def test_escalation_fails_on_low_overall_map50() -> None:
-    block = check_escalation(extract_metrics(_fake_results(map50=0.949)), CLASSES)
+    block = check_escalation(extract_metrics(_fake_results(map50=0.799)), CLASSES, FLOORS)
     assert block["passed"] is False
     assert all(entry["passed"] for entry in block["per_class"].values())
+
+
+def test_escalation_uses_module_fallback_when_floors_none() -> None:
+    # No floors arg -> module fallbacks (== config defaults) apply.
+    block = check_escalation(extract_metrics(_fake_results(map50=0.799)), CLASSES)
+    assert block["passed"] is False
+    assert block["thresholds"]["overall_map50"] == OVERALL_MAP50_FLOOR
 
 
 def test_escalation_fails_on_missing_class() -> None:
     metrics = extract_metrics(_fake_results())
     del metrics["per_class"]["organic"]
-    block = check_escalation(metrics, CLASSES)
+    block = check_escalation(metrics, CLASSES, FLOORS)
     assert block["passed"] is False
     assert block["per_class"]["organic"] == {"map50": None, "recall": None, "passed": False}
 

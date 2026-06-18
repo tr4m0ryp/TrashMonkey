@@ -24,11 +24,13 @@ from trashmonkey.models.evaluation import (
     load_report,
     materialize_severity,
 )
-from trashmonkey.utils.config import Config, load_config
+from trashmonkey.utils.config import Config, EscalationConfig, load_config
 
 CLASSES = ("plastic", "paper", "cardboard", "metal", "glass", "organic")
 VAL_KEYS = ("srcA/v0.jpg", "srcA/v1.jpg", "srcB/v2.jpg")
 TEST_KEYS = ("realwaste/t0.jpg", "realwaste/t1.jpg")
+CLEAN_KEYS = ("srcA/c0.jpg", "srcB/c1.jpg")  # deployment-matched CLEAN tier
+WILD_KEYS = ("wild/w0.jpg", "wild/w1.jpg")  # in-the-wild stress tier
 GROUPS = {  # v0 and v1 are two photos of the same physical object
     "srcA/v0.jpg": "srcA/v0.jpg",
     "srcA/v1.jpg": "srcA/v0.jpg",
@@ -50,7 +52,13 @@ def dataset(tmp_path: Path) -> tuple[Path, Path, Path]:
     """Tiny emitted dataset + split manifest + fake best.pt."""
     root = tmp_path / "dataset"
     rng = np.random.default_rng(42)
-    for split, keys in (("val", VAL_KEYS), ("test", TEST_KEYS)):
+    splits = (
+        ("val", VAL_KEYS),
+        ("test", TEST_KEYS),
+        ("clean_test", CLEAN_KEYS),
+        ("wild_test", WILD_KEYS),
+    )
+    for split, keys in splits:
         (root / "images" / split).mkdir(parents=True)
         (root / "labels" / split).mkdir(parents=True)
         for key in keys:
@@ -65,6 +73,8 @@ def dataset(tmp_path: Path) -> tuple[Path, Path, Path]:
         "train": "images/val",
         "val": "images/val",
         "test": "images/test",
+        "clean_test": "images/clean_test",
+        "wild_test": "images/wild_test",
         "names": dict(enumerate(CLASSES)),
     }
     data_yaml.write_text(yaml.safe_dump(spec, sort_keys=False))
@@ -178,6 +188,8 @@ def test_tier_order_and_sweep_conf(
         ("dataset", "test"),
         ("severity_1", "test"),
         ("severity_2", "test"),
+        ("dataset", "clean_test"),
+        ("dataset", "wild_test"),
     ]
     assert all(c["conf"] == 0.001 for c in calls["val"])
     assert all(c["imgsz"] == cfg.model.imgsz for c in calls["val"])
@@ -185,6 +197,15 @@ def test_tier_order_and_sweep_conf(
     assert [t.severity for t in report.test2] == [1, 2]
     assert [p.severity for p in report.severity_curve] == [1, 2]
     assert report.severity_curve[0].map50 == report.test2[0].map50
+    # CLEAN/WILD tiers run after the existing tiers and stay report-only.
+    assert report.clean is not None and report.clean.tier == "clean"
+    assert report.clean.split == "clean_test" and report.clean.severity == 0
+    assert report.wild is not None and report.wild.split == "wild_test"
+    # Headline surfaces the CLEAN tier: mAP50 + per-class recall up front.
+    assert report.headline["tier"] == "clean"
+    assert report.headline["map50"] == report.clean.map50
+    assert report.headline["map50_95"] == report.clean.map50_95
+    assert set(report.headline["per_class_recall"]) == set(CLASSES)
 
 
 def test_no_selection_hooks_on_test_tiers() -> None:
@@ -262,29 +283,133 @@ def test_report_yaml_round_trip(
         assert curves["precision"].shape == (len(curves["classes"]), len(curves["confidence"]))
 
 
-# --- escalation (T7, reused rule) ---------------------------------------------------
+# --- escalation (reused rule, gated on the CLEAN tier) ------------------------------
+
+# Per-tier result queue in evaluate()'s val() order: val, test1, sev1, sev2,
+# clean_test, wild_test. ``clean`` is what the escalation gate reads.
+def _result_queue(
+    *, val: SimpleNamespace, test1: SimpleNamespace, clean: SimpleNamespace
+) -> list[SimpleNamespace]:
+    return [val, test1, *(_fake_metrics() for _ in SEVERITIES), clean, _fake_metrics()]
 
 
-def test_escalation_edge_recall_089_fails(
+def test_escalation_gates_on_clean_not_val_or_test1(
     cfg: Config, dataset: tuple[Path, Path, Path], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    results = [_fake_metrics(per_class={"glass": {"recall": 0.89}})]
-    results += [_fake_metrics() for _ in range(1 + len(SEVERITIES))]
-    _install_fake_ultralytics(monkeypatch, results)
+    # VAL fails a class, TEST-1 collapses, but the CLEAN tier is healthy: the
+    # gate reads CLEAN, so it passes.
+    queue = _result_queue(
+        val=_fake_metrics(per_class={"glass": {"recall": 0.10}}),
+        test1=_fake_metrics(map50=0.50),
+        clean=_fake_metrics(),
+    )
+    _install_fake_ultralytics(monkeypatch, queue)
+    report = _evaluate(cfg, dataset, tmp_path)
+    assert report.escalation["passed"] is True
+    assert report.headline["tier"] == "clean"
+
+
+def test_escalation_fails_when_clean_tier_below_floor(
+    cfg: Config, dataset: tuple[Path, Path, Path], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # CLEAN-tier class below the config recall floor fails the gate even though
+    # VAL is healthy.
+    queue = _result_queue(
+        val=_fake_metrics(),
+        test1=_fake_metrics(),
+        clean=_fake_metrics(per_class={"glass": {"recall": 0.69}}),
+    )
+    _install_fake_ultralytics(monkeypatch, queue)
     report = _evaluate(cfg, dataset, tmp_path)
     assert report.escalation["passed"] is False
     assert report.escalation["per_class"]["glass"]["passed"] is False
     assert report.escalation["per_class"]["plastic"]["passed"] is True
 
 
-def test_escalation_uses_val_not_test1(
+def test_escalation_respects_config_overall_floor(
     cfg: Config, dataset: tuple[Path, Path, Path], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    results = [_fake_metrics(), _fake_metrics(map50=0.50)]  # TEST-1 collapses
-    results += [_fake_metrics() for _ in SEVERITIES]
-    _install_fake_ultralytics(monkeypatch, results)
-    report = _evaluate(cfg, dataset, tmp_path)
-    assert report.escalation["passed"] is True  # escalation reads VAL only
+    # Floor 0.80: a 0.81 clean tier passes, a 0.79 one fails (and the recorded
+    # thresholds come from cfg.eval.escalation, not the old 0.95 constant).
+    floored = dataclasses.replace(
+        cfg,
+        eval=dataclasses.replace(
+            cfg.eval,
+            escalation=EscalationConfig(overall_map50=0.80, class_map50=0.70, class_recall=0.70),
+        ),
+    )
+    pass_queue = _result_queue(
+        val=_fake_metrics(), test1=_fake_metrics(), clean=_fake_metrics(map50=0.81)
+    )
+    _install_fake_ultralytics(monkeypatch, pass_queue)
+    passing = _evaluate(floored, dataset, tmp_path / "pass")
+    assert passing.escalation["passed"] is True
+    assert passing.escalation["thresholds"]["overall_map50"] == 0.80
+
+    fail_queue = _result_queue(
+        val=_fake_metrics(), test1=_fake_metrics(), clean=_fake_metrics(map50=0.79)
+    )
+    _install_fake_ultralytics(monkeypatch, fail_queue)
+    failing = _evaluate(floored, dataset, tmp_path / "fail")
+    assert failing.escalation["passed"] is False
+
+
+def test_escalation_falls_back_to_val_without_clean_test(
+    cfg: Config, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Old 3-split dataset (no clean_test/wild_test): the gate falls back to VAL.
+    root = tmp_path / "legacy"
+    rng = np.random.default_rng(1)
+    for split, keys in (("val", VAL_KEYS), ("test", TEST_KEYS)):
+        (root / "images" / split).mkdir(parents=True)
+        (root / "labels" / split).mkdir(parents=True)
+        for key in keys:
+            flat = key.replace("/", "__")
+            assert cv2.imwrite(
+                str(root / "images" / split / flat),
+                rng.integers(0, 255, size=(48, 64, 3), dtype=np.uint8),
+            )
+            (root / "labels" / split / (Path(flat).stem + ".txt")).write_text(
+                "0 0.5 0.5 0.2 0.2\n"
+            )
+    data_yaml = root / "dataset.yaml"
+    data_yaml.write_text(
+        yaml.safe_dump(
+            {
+                "path": str(root.resolve()),
+                "train": "images/val",
+                "val": "images/val",
+                "test": "images/test",
+                "names": dict(enumerate(CLASSES)),
+            },
+            sort_keys=False,
+        )
+    )
+    manifest = tmp_path / "legacy_manifest.yaml"
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "assignments": {
+                    **{k: "val" for k in VAL_KEYS},
+                    **{k: "test" for k in TEST_KEYS},
+                },
+                "groups": GROUPS,
+            }
+        )
+    )
+    best_pt = tmp_path / "legacy_weights" / "best.pt"
+    best_pt.parent.mkdir()
+    best_pt.write_bytes(b"fake checkpoint")
+    calls = _install_fake_ultralytics(
+        monkeypatch, [_fake_metrics(map50=0.79), _fake_metrics(), _fake_metrics(), _fake_metrics()]
+    )
+    report = evaluate(cfg, best_pt, data_yaml, manifest, out_dir=tmp_path / "evaluation")
+    assert report.clean is None and report.wild is None
+    # No clean_test/wild_test val() calls were issued.
+    assert [c["split"] for c in calls["val"]] == ["val", "test", "test", "test"]
+    # The gate read the (failing) VAL tier; headline falls back to VAL too.
+    assert report.escalation["passed"] is False
+    assert report.headline["tier"] == "val"
 
 
 # --- detections dump (T9 input) ------------------------------------------------------

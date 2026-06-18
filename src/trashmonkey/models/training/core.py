@@ -124,7 +124,7 @@ def train(
     best_pt = Path(str(trainer.best))
     run_dir = Path(str(trainer.save_dir))
     metrics = extract_metrics(results)
-    escalation = check_escalation(metrics, cfg.classes)
+    escalation = check_escalation(metrics, cfg.classes, cfg.eval.escalation)
     record = build_run_record(
         cfg=cfg,
         repo_root=_REPO_ROOT,

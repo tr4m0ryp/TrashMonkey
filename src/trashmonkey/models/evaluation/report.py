@@ -58,7 +58,14 @@ class SeverityPoint:
 
 @dataclass(frozen=True)
 class EvalReport:
-    """Full T6 report: per-tier metrics, severity curve, escalation, dumps."""
+    """Full report: per-tier metrics, severity curve, escalation, dumps.
+
+    ``clean`` is the deployment-matched CLEAN tier (the ``clean_test`` split)
+    and ``wild`` is the in-the-wild stress tier (the ``wild_test`` split); both
+    are None for datasets emitted without those splits. ``headline`` surfaces
+    the CLEAN-tier mAP50 + per-class recall (with mAP50-95 as a secondary
+    field) -- it falls back to VAL when no CLEAN tier was run.
+    """
 
     seed: int
     best_pt: str
@@ -71,6 +78,9 @@ class EvalReport:
     severity_curve: tuple[SeverityPoint, ...]
     escalation: dict[str, Any]  # training/escalation.py check_escalation block
     detections_path: str  # JSONL the threshold tuner (012) replays
+    clean: TierReport | None = None  # deployment-matched CLEAN tier (clean_test)
+    wild: TierReport | None = None  # in-the-wild stress tier (wild_test)
+    headline: dict[str, Any] = dataclasses.field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         data = dataclasses.asdict(self)
@@ -113,11 +123,18 @@ def _tier_from(data: dict[str, Any], where: str) -> TierReport:
     )
 
 
+def _optional_tier_from(data: dict[str, Any] | None, where: str) -> TierReport | None:
+    """A tier that may be absent (CLEAN/WILD tiers on old 3-split datasets)."""
+    return None if data is None else _tier_from(data, where)
+
+
 def report_from_dict(data: dict[str, Any]) -> EvalReport:
     """Rebuild an ``EvalReport`` from its ``to_dict`` form (fail fast)."""
     if data.get("stage") != "evaluate":
         raise EvalError(f"not an evaluation report: stage={data.get('stage')!r}")
-    required = [f.name for f in dataclasses.fields(EvalReport)]
+    # clean/wild/headline are optional: old reports predate the CLEAN tier.
+    optional = {"clean", "wild", "headline"}
+    required = [f.name for f in dataclasses.fields(EvalReport) if f.name not in optional]
     missing = sorted(set(required) - set(data))
     if missing:
         raise EvalError(f"report missing key(s): {', '.join(missing)}")
@@ -142,6 +159,9 @@ def report_from_dict(data: dict[str, Any]) -> EvalReport:
         ),
         escalation=dict(data["escalation"]),
         detections_path=str(data["detections_path"]),
+        clean=_optional_tier_from(data.get("clean"), "clean"),
+        wild=_optional_tier_from(data.get("wild"), "wild"),
+        headline=dict(data.get("headline") or {}),
     )
 
 
