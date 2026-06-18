@@ -37,12 +37,21 @@ class SmokeSetupError(Exception):
 
 
 def no_detections(image_path: Path) -> Sequence[Detection]:
-    """Injected DINO backend: never detects, so the chain falls through."""
-    return ()
+    """Injected DINO backend: a confident centered box (method 'dino').
+
+    The smoke pool must SURVIVE the T5 label-quality filter, whose smoke config
+    drops the ``centerbox`` fallback; a real dino-method box keeps every fixture
+    image so balance/split still receive a non-empty pool. (Earlier this forced
+    the centerbox fallback, which the now-wired filter would discard wholesale.)
+    """
+    with Image.open(image_path) as img:
+        width, height = img.size
+    box = (width * 0.25, height * 0.25, width * 0.75, height * 0.75)
+    return [Detection(xyxy=box, confidence=0.9)]
 
 
 def empty_mask(image_path: Path) -> npt.NDArray[np.uint8]:
-    """Injected BiRefNet backend: all-zero mask -> the chain emits a center box."""
+    """Injected BiRefNet backend: never fires (dino always wins above)."""
     with Image.open(image_path) as img:
         width, height = img.size
     return np.zeros((height, width), dtype=np.uint8)

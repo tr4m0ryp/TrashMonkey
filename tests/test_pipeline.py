@@ -57,6 +57,7 @@ def source_entry(
     mapping: dict[str, str],
     drops: list[str],
     box_order: list[str] | None = None,
+    role: str | None = None,
 ) -> dict[str, object]:
     entry: dict[str, object] = {
         "name": name,
@@ -70,6 +71,8 @@ def source_entry(
     }
     if box_order is not None:
         entry["box_order"] = box_order
+    if role is not None:
+        entry["role"] = role
     return entry
 
 
@@ -117,6 +120,71 @@ def write_fixture(tmp_path: Path) -> Path:
     } | {"models": str(tmp_path / "models"), "reports": str(tmp_path / "reports")}
     raw_cfg["eval"]["leave_out_source"] = "beta"
     raw_cfg["eval"]["val_fraction"] = 0.5
+    cfg_dir = tmp_path / "configs"
+    cfg_dir.mkdir()
+    (cfg_dir / "config.yaml").write_text(yaml.safe_dump(raw_cfg))
+    (cfg_dir / "datasets.yaml").write_text(yaml.safe_dump(datasets))
+    return cfg_dir / "config.yaml"
+
+
+def write_tiers_fixture(tmp_path: Path) -> Path:
+    """write_fixture + a `gamma` test_only source and an alpha clean holdout.
+
+    gamma (role=test_only, plastic) must land wholesale in `wild_test` and never
+    in train/val/balance; alpha is the clean_holdout source so a `clean_test`
+    tier is carved. beta stays the leave-out (TEST-1) source.
+    """
+    archives = tmp_path / "archives"
+    archives.mkdir()
+    make_zip(
+        archives / "alpha.zip",
+        {
+            "bottle/a1.png": png_bytes(1),
+            "bottle/a2.png": png_bytes(2),
+            "bottle/a3.png": png_bytes(11),
+            "bottle/a4.png": png_bytes(12),
+            "sheet/a5.png": png_bytes(3),
+            "box/a6.png": png_bytes(4),
+            "can/a7.png": png_bytes(5),
+            "junk/a8.png": png_bytes(6),
+        },
+    )
+    make_zip(archives / "beta.zip", {"jar/b1.png": png_bytes(7), "peel/b2.png": png_bytes(8)})
+    make_zip(
+        archives / "gamma.zip",
+        {"bottle/g1.png": png_bytes(9), "bottle/g2.png": png_bytes(10)},
+    )
+    datasets = {
+        "sources": [
+            source_entry(
+                "alpha",
+                archives / "alpha.zip",
+                {
+                    "bottle": "plastic",
+                    "sheet": "paper",
+                    "box": "cardboard",
+                    "can": "metal",
+                    "junk": "DROP",
+                },
+                ["junk"],
+            ),
+            source_entry("beta", archives / "beta.zip", {"jar": "glass", "peel": "organic"}, []),
+            source_entry(
+                "gamma",
+                archives / "gamma.zip",
+                {"bottle": "plastic"},
+                [],
+                role="test_only",
+            ),
+        ]
+    }
+    raw_cfg = yaml.safe_load((REPO_ROOT / "configs" / "config.yaml").read_text())
+    raw_cfg["paths"] = {
+        key: str(tmp_path / "data" / key) for key in ("raw", "interim", "processed", "external")
+    } | {"models": str(tmp_path / "models"), "reports": str(tmp_path / "reports")}
+    raw_cfg["eval"]["leave_out_source"] = "beta"
+    raw_cfg["eval"]["val_fraction"] = 0.5
+    raw_cfg["eval"]["clean_holdout"] = {"fraction": 0.5, "sources": ["alpha"]}
     cfg_dir = tmp_path / "configs"
     cfg_dir.mkdir()
     (cfg_dir / "config.yaml").write_text(yaml.safe_dump(raw_cfg))
@@ -471,6 +539,44 @@ def test_full_pipeline_halts_at_qa_then_resumes_to_dataset(ctx: PipelineContext)
 
     # idempotent rerun: everything now skips
     assert run_pipeline(stages, acked) == {name: "skipped" for name in actions}
+
+
+def test_full_pipeline_emits_clean_and_wild_test_tiers(tmp_path: Path) -> None:
+    base = build_context(write_tiers_fixture(tmp_path))
+    ctx = dataclasses.replace(
+        base, ack_review=True, dino_predict=fake_dino, birefnet_mask=fail_mask
+    )
+    run_pipeline(build_stages(), ctx)
+
+    root = ctx.processed_root / ctx.cfg.experiment.name
+    spec = yaml.safe_load((root / "dataset.yaml").read_text())
+    for split in ("train", "val", "test", "clean_test", "wild_test"):
+        assert spec[split] == f"images/{split}", f"missing split {split} in dataset.yaml"
+        assert (root / "images" / split).is_dir()
+
+    # wild_test holds EXACTLY the gamma (role=test_only) images.
+    wild = {p.name for p in (root / "images" / "wild_test").iterdir()}
+    assert wild == {"plastic__gamma__g1.png", "plastic__gamma__g2.png"}
+    # clean_test is carved from alpha only.
+    clean = {p.name for p in (root / "images" / "clean_test").iterdir()}
+    assert clean and all("alpha__" in n for n in clean)
+    # train/val exclude both the leave-out (beta) and the test_only (gamma) source.
+    trainval = [
+        p.name for s in ("train", "val") for p in (root / "images" / s).iterdir()
+    ]
+    assert all("beta__" not in n and "gamma__" not in n for n in trainval)
+    # labels travel with images for every emitted split.
+    for split in ("train", "val", "test", "clean_test", "wild_test"):
+        for image in (root / "images" / split).iterdir():
+            assert (root / "labels" / split / f"{image.stem}.txt").is_file()
+
+    # the balance manifest records the label-filter drop summary.
+    balance = yaml.safe_load(ctx.manifest_path("balance").read_text())
+    assert "label_filter" in balance
+    assert "dropped" in balance["label_filter"]
+    split_manifest = yaml.safe_load(ctx.manifest_path("split").read_text())
+    assert split_manifest["test_only_sources"] == ["gamma"]
+    assert split_manifest["clean_holdout_sources"] == ["alpha"]
 
 
 def test_pipeline_is_seeded_and_deterministic(tmp_path: Path) -> None:

@@ -100,6 +100,85 @@ def test_val_fraction_bounds() -> None:
         split_items(items, [], leave_out_source=None, val_fraction=1.5)
 
 
+def test_wild_test_holds_exactly_test_only_sources() -> None:
+    items = (
+        make_items("glass", "gc3", 30)
+        + make_items("glass", "garbage", 12)
+        + make_items("glass", "realwaste", 8)
+    )
+    result = split_items(
+        items,
+        [],
+        leave_out_source="realwaste",
+        val_fraction=0.2,
+        test_only_sources={"garbage"},
+    )
+    for item in items:
+        split = result.assignments[item.key]
+        if item.source == "garbage":
+            assert split == "wild_test"
+        elif item.source == "realwaste":
+            assert split == "test"
+        else:
+            assert split in {"train", "val"}
+    assert result.counts["wild_test"] == {"glass": 12}
+    # train/val exclude both the leave-out and the test_only source.
+    trainval = {k for k, v in result.assignments.items() if v in {"train", "val"}}
+    assert all("garbage__" not in k and "realwaste__" not in k for k in trainval)
+    assert result.test_only_sources == ("garbage",)
+
+
+def test_clean_test_carves_stratified_fraction_without_straddling() -> None:
+    items = make_items("metal", "trashnet", 40) + make_items("metal", "gc3", 40)
+    edges = [
+        # two trashnet images form one physical-object group.
+        NearEdge("metal/trashnet__0000.png", "metal/trashnet__0001.png", 4),
+    ]
+    result = split_items(
+        items,
+        edges,
+        leave_out_source=None,
+        val_fraction=0.2,
+        clean_holdout_sources={"trashnet"},
+        clean_holdout_fraction=0.25,
+    )
+    clean = {k for k, v in result.assignments.items() if v == "clean_test"}
+    # only the trashnet source is eligible; gc3 is never carved.
+    assert all("trashnet__" in k for k in clean)
+    assert all(result.assignments[k] in {"train", "val"} for k in items_keys(items, "gc3"))
+    # 40 trashnet images -> 39 groups (one pair) -> round(0.25*39)=10 groups.
+    trashnet_groups = {result.group_ids[k] for k in items_keys(items, "trashnet")}
+    carved_groups = {result.group_ids[k] for k in clean}
+    assert len(carved_groups) == round(0.25 * len(trashnet_groups))
+    # the near-dup pair never straddles: both members share one split.
+    a, b = "metal/trashnet__0000.png", "metal/trashnet__0001.png"
+    assert result.assignments[a] == result.assignments[b]
+    assert result.clean_holdout_fraction == 0.25
+    assert result.clean_holdout_sources == ("trashnet",)
+
+
+def items_keys(items: list[Item], source: str) -> list[str]:
+    return [it.key for it in items if it.source == source]
+
+
+def test_inert_knobs_equal_legacy_three_split() -> None:
+    items = make_items("glass", "gc3", 40) + make_items("glass", "realwaste", 25)
+    edges = [NearEdge("glass/gc3__0000.png", "glass/gc3__0001.png", 4)]
+    legacy = split_items(items, edges, leave_out_source="realwaste", val_fraction=0.2)
+    with_knobs = split_items(
+        items,
+        edges,
+        leave_out_source="realwaste",
+        val_fraction=0.2,
+        test_only_sources=frozenset(),
+        clean_holdout_sources=frozenset(),
+        clean_holdout_fraction=0.0,
+    )
+    assert with_knobs.assignments == legacy.assignments
+    assert with_knobs.counts == legacy.counts
+    assert set(legacy.assignments.values()) == {"train", "val", "test"}
+
+
 def test_emit_dataset_layout_and_yaml(tmp_path: Path) -> None:
     root = tmp_path / "remapped"
     items = write_corpus(root, "plastic", "gc3", 10, 100)
@@ -122,6 +201,44 @@ def test_emit_dataset_layout_and_yaml(tmp_path: Path) -> None:
         assert [p.stem for p in images] == [p.stem for p in labels]
         assert all(p.suffix == ".txt" for p in labels)
     assert labels[0].read_text().startswith("0 ")
+
+
+def test_emit_includes_clean_and_wild_test_splits(tmp_path: Path) -> None:
+    root = tmp_path / "remapped"
+    items = write_corpus(root, "plastic", "trashnet", 12, 100)
+    items += write_corpus(root, "plastic", "garbage", 4, 500)
+    items += write_corpus(root, "plastic", "realwaste", 4, 900)
+    result = split_items(
+        items,
+        [],
+        leave_out_source="realwaste",
+        val_fraction=0.2,
+        test_only_sources={"garbage"},
+        clean_holdout_sources={"trashnet"},
+        clean_holdout_fraction=0.25,
+    )
+    yaml_path = emit_dataset(result, items, tmp_path / "processed", "baseline", CLASSES)
+    spec = yaml.safe_load(yaml_path.read_text())
+    # every emitted split has members; emission order follows SPLITS.
+    assert list(spec)[:1] == ["path"]
+    for split in ("train", "val", "test", "clean_test", "wild_test"):
+        assert spec[split] == f"images/{split}"
+    dataset_root = tmp_path / "processed" / "baseline"
+    wild = sorted(p.name for p in (dataset_root / "images" / "wild_test").iterdir())
+    assert wild == [f"plastic__garbage__{i:04d}.png" for i in range(4)]
+    clean_names = [p.name for p in (dataset_root / "images" / "clean_test").iterdir()]
+    assert clean_names and all("trashnet__" in n for n in clean_names)
+
+
+def test_emit_omits_empty_new_splits(tmp_path: Path) -> None:
+    root = tmp_path / "remapped"
+    items = write_corpus(root, "plastic", "gc3", 8, 100)
+    items += write_corpus(root, "plastic", "realwaste", 4, 900)
+    result = split_items(items, [], leave_out_source="realwaste", val_fraction=0.2)
+    yaml_path = emit_dataset(result, items, tmp_path / "processed", "baseline", CLASSES)
+    spec = yaml.safe_load(yaml_path.read_text())
+    assert "clean_test" not in spec and "wild_test" not in spec
+    assert set(spec) == {"path", "train", "val", "test", "names"}
 
 
 def test_emit_requires_labels(tmp_path: Path) -> None:

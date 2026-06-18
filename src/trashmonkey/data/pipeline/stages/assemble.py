@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from trashmonkey.data.autobox import PROVENANCE_FILENAME
 from trashmonkey.data.balance import balance_items
 from trashmonkey.data.dedup import Item, NearEdge, dedup_items, scan_remapped
 from trashmonkey.data.pipeline.context import (
@@ -19,11 +20,36 @@ from trashmonkey.data.pipeline.context import (
     manifest_str_list,
 )
 from trashmonkey.data.pipeline.runner import Stage
+from trashmonkey.data.qa import ProvenanceRecord, load_provenance
+from trashmonkey.data.quality import filter_items
 from trashmonkey.data.split import emit_dataset, split_items
 
 
 def _scan(ctx: PipelineContext) -> list[Item]:
     return scan_remapped(ctx.remapped_root, list(ctx.cfg.classes))
+
+
+def _test_only_sources(ctx: PipelineContext) -> frozenset[str]:
+    return frozenset(
+        name for name, spec in ctx.registry.items() if spec.role == "test_only"
+    )
+
+
+def _load_provenance(ctx: PipelineContext) -> dict[str, ProvenanceRecord]:
+    """Merge every per-group autobox provenance JSONL, keyed by image stem.
+
+    Mirrors how the qa stage locates provenance (one JSONL per group dir under
+    ``ctx.autobox_root``). Sources never auto-boxed simply have no entry, which
+    the 004 filter treats as "keep unless clearly degenerate".
+    """
+    merged: dict[str, ProvenanceRecord] = {}
+    if not ctx.autobox_root.is_dir():
+        return merged
+    for entry in sorted(ctx.autobox_root.iterdir()):
+        prov = entry / PROVENANCE_FILENAME
+        if entry.is_dir() and prov.is_file():
+            merged.update(load_provenance(prov))
+    return merged
 
 
 def _items_from_kept(ctx: PipelineContext, stage: str) -> list[Item]:
@@ -63,15 +89,39 @@ def dedup_stage() -> Stage:
 
 def _balance_run(ctx: PipelineContext) -> str:
     items = _items_from_kept(ctx, "dedup")
-    leave_out = ctx.cfg.eval.leave_out_source
-    result = balance_items(
+    label_filter = ctx.cfg.eval.label_filter
+    filtered = filter_items(
         items,
+        _load_provenance(ctx),
+        drop_methods=set(label_filter.drop_methods),
+        min_confidence=label_filter.min_confidence,
+        max_box_frac=label_filter.max_box_frac,
+        min_box_frac=label_filter.min_box_frac,
+    )
+    leave_out = ctx.cfg.eval.leave_out_source
+    exempt = _test_only_sources(ctx)
+    if leave_out:
+        exempt = exempt | {leave_out}
+    result = balance_items(
+        filtered.kept,
         seed=ctx.cfg.seed,
-        exempt_sources=frozenset({leave_out}) if leave_out else frozenset(),
+        exempt_sources=exempt,
         source_caps={name: spec.cap for name, spec in ctx.registry.items() if spec.cap},
     )
-    result.write_manifest(ctx.manifest_path("balance"))
-    summary = f"kept {len(result.kept)} of {len(items)} images (cap {result.cap})"
+    drop_counts: dict[str, int] = {}
+    for reason in filtered.reasons.values():
+        drop_counts[reason] = drop_counts.get(reason, 0) + 1
+    payload = result.to_dict()
+    payload["label_filter"] = {
+        "dropped": len(filtered.dropped),
+        "by_reason": dict(sorted(drop_counts.items())),
+    }
+    ctx.manifest_path("balance").parent.mkdir(parents=True, exist_ok=True)
+    ctx.write_manifest("balance", {k: v for k, v in payload.items() if k != "stage"})
+    summary = (
+        f"kept {len(result.kept)} of {len(items)} images (cap {result.cap}); "
+        f"label filter dropped {len(filtered.dropped)}"
+    )
     if result.floor_warnings:
         summary += f", {len(result.floor_warnings)} class(es) under the {result.floor} floor"
     return summary
@@ -101,12 +151,16 @@ def _near_edges(manifest: dict[str, Any]) -> list[NearEdge]:
 def _split_run(ctx: PipelineContext) -> str:
     items = _items_from_kept(ctx, "balance")
     edges = _near_edges(ctx.read_manifest("dedup"))
+    clean_holdout = ctx.cfg.eval.clean_holdout
     result = split_items(
         items,
         edges,
         leave_out_source=ctx.cfg.eval.leave_out_source,
         val_fraction=ctx.cfg.eval.val_fraction,
         seed=ctx.cfg.seed,
+        test_only_sources=_test_only_sources(ctx),
+        clean_holdout_sources=set(clean_holdout.sources),
+        clean_holdout_fraction=clean_holdout.fraction,
     )
     result.write_manifest(ctx.manifest_path("split"))
     yaml_path = emit_dataset(
