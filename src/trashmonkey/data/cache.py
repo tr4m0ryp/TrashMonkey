@@ -47,7 +47,11 @@ def dataset_fingerprint(config_path: Path, datasets_path: Path) -> str:
     """sha256 of the inputs that determine the processed dataset.
 
     Covers ``datasets.yaml`` byte-for-byte and the dataset-relevant config
-    fields (classes, seed, eval.val_fraction, eval.leave_out_source).
+    fields: classes, seed, the split knobs (eval.val_fraction,
+    eval.leave_out_source, eval.clean_holdout) and the label-quality filter
+    (eval.label_filter). Tuning any of these reshapes the processed pool, so the
+    cache must rebuild. eval.escalation/train.* are NOT included -- they affect
+    gating/training, not the dataset.
     """
     cfg = load_config(config_path)
     canonical = yaml.safe_dump(
@@ -56,6 +60,16 @@ def dataset_fingerprint(config_path: Path, datasets_path: Path) -> str:
             "seed": cfg.seed,
             "val_fraction": cfg.eval.val_fraction,
             "leave_out_source": cfg.eval.leave_out_source,
+            "clean_holdout": {
+                "fraction": cfg.eval.clean_holdout.fraction,
+                "sources": list(cfg.eval.clean_holdout.sources),
+            },
+            "label_filter": {
+                "min_confidence": cfg.eval.label_filter.min_confidence,
+                "max_box_frac": cfg.eval.label_filter.max_box_frac,
+                "min_box_frac": cfg.eval.label_filter.min_box_frac,
+                "drop_methods": list(cfg.eval.label_filter.drop_methods),
+            },
         },
         sort_keys=True,
     ).encode()
