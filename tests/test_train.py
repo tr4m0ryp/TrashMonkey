@@ -179,7 +179,7 @@ def test_train_kwargs_snapshot(cfg: Config) -> None:
         "warmup_epochs": 3.0,
         "batch": 16,
         "imgsz": 640,
-        "patience": 50,
+        "patience": 30,
         "close_mosaic": 10,
         "cache": "disk",
         "amp": True,
