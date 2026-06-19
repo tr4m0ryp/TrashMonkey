@@ -28,14 +28,15 @@ research = ["numpy", "pandas", "matplotlib", "jupyter"]
 # zero-shot-detection model (IDEA-Research/grounding-dino-tiny) -- the
 # third-party autodistill/groundingdino fork breaks against modern transformers
 # (BertModel.get_head_mask), so we use the maintained transformers path instead.
-# rembg's BiRefNet session ships in the base package (>=2.0.59); the [gpu] extra
-# supplies onnxruntime-gpu so the BiRefNet fallback runs on CUDA (the [cpu] build
-# made the fallback the slow tail of the build). rembg uses whatever onnxruntime
-# providers exist, so it degrades to CPU if CUDA is unavailable. torch comes from
-# ultralytics (core dep).
+# rembg's BiRefNet session ships in the base package (>=2.0.59) and runs as the
+# autobox FALLBACK (DINO-primary). Use the [cpu] extra (onnxruntime CPU): the
+# [gpu] extra pulls onnxruntime-gpu built for a CUDA major that does not match
+# Colab's runtime (libcudart.so.13 vs CUDA 12.x), and rembg sys.exit(1)s on that
+# import failure -- killing the whole build. CPU onnxruntime has no CUDA
+# dependency, so it always imports. torch comes from ultralytics (core dep).
 boxing = [
     "transformers>=4.40,<5",
-    "rembg[gpu]>=2.0.59,<3",
+    "rembg[cpu]>=2.0.59,<3",
 ]
 
 [tool.setuptools.packages.find]
