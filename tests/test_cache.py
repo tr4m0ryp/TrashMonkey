@@ -82,7 +82,7 @@ def test_fingerprint_ignores_escalation_floors(tmp_path: Path) -> None:
     # Escalation floors gate model-size selection, not the dataset -> no rebuild.
     config, datasets = _config_pair(tmp_path)
     before = dataset_fingerprint(config, datasets)
-    config.write_text(config.read_text().replace("overall_map50: 0.8", "overall_map50: 0.9"))
+    config.write_text(config.read_text().replace("overall_map50: 0.80", "overall_map50: 0.90"))
     assert dataset_fingerprint(config, datasets) == before
 
 
