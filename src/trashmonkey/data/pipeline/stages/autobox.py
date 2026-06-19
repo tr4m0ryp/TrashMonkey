@@ -190,6 +190,8 @@ def _box_class(
 
 def _box_wilderness(
     ctx: PipelineContext,
+    dino: DinoPredictFn,
+    birefnet: MaskFn,
     on_image: ProgressFn | None = None,
     advance: Callable[[int], None] | None = None,
 ) -> list[BoxRecord]:
@@ -204,9 +206,6 @@ def _box_wilderness(
         if advance is not None:
             advance(len(records))
     else:
-        dino: DinoPredictFn = ctx.dino_predict or build_dino_backend(
-            WILDERNESS_PROMPT, box_threshold=MIN_BOX_CONFIDENCE
-        )
         # class_name only gates the chain's PROMPTS membership check here: the
         # injected dino backend carries the wilderness prompt, and class 0 is a
         # placeholder -- the T9 threshold tuner needs localization only.
@@ -217,7 +216,7 @@ def _box_wilderness(
             class_name=ctx.cfg.classes[0],
             source=WILDERNESS_GROUP,
             dino_predict=dino,
-            birefnet_mask=ctx.birefnet_mask,
+            birefnet_mask=birefnet,
             progress=on_image,
         )
         for image in images:
