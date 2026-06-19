@@ -28,17 +28,25 @@ from __future__ import annotations
 
 import json
 import shutil
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Callable, cast
+from typing import cast
+
+import numpy as np
+import numpy.typing as npt
 
 from trashmonkey.data.autobox import (
     MIN_BOX_CONFIDENCE,
+    PROMPTS,
     PROVENANCE_FILENAME,
     BoxRecord,
+    Detection,
     DinoPredictFn,
+    MaskFn,
     Method,
     ProgressFn,
     box_directory,
+    build_birefnet_backend,
     build_dino_backend,
 )
 from trashmonkey.data.pipeline.context import PipelineContext
