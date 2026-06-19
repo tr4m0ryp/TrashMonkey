@@ -96,16 +96,11 @@ def download_source(spec: SourceSpec, raw_root: Path, *, force: bool = False) ->
 def download_sources(
     specs: Iterable[SourceSpec], raw_root: Path, *, force: bool = False
 ) -> list[DownloadResult]:
-    """Download the given sources concurrently; results keep input order.
+    """Download every given source in order; fail fast on the first error.
 
-    Each source writes to its own raw_root/<name>/ with an isolated temp dir, so
-    the fetches are independent and safe to run in parallel (network I/O bound).
-    Results are returned in input order; the first failing source (in that order)
-    propagates its exception -- fail fast, deterministically.
+    Deliberately SEQUENTIAL: the kaggle CLI is not concurrency-safe -- it creates
+    its config dir with a non-atomic exists-then-makedirs, so parallel kaggle
+    fetches race and one crashes with FileExistsError on a fresh VM. The big
+    sources are kaggle, so parallelism bought little anyway.
     """
-    spec_list = list(specs)
-    if len(spec_list) <= 1:
-        return [download_source(spec, raw_root, force=force) for spec in spec_list]
-    with ThreadPoolExecutor(max_workers=min(len(spec_list), 5)) as pool:
-        futures = [pool.submit(download_source, spec, raw_root, force=force) for spec in spec_list]
-        return [future.result() for future in futures]
+    return [download_source(spec, raw_root, force=force) for spec in specs]
