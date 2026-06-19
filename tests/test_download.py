@@ -117,8 +117,10 @@ def test_role_and_box_order_defaults_and_real_registry() -> None:
     registry = load_registry(REPO_ROOT / "configs" / "datasets.yaml", TARGET_CLASSES)
     assert registry["garbage-detection"].role == "test_only"
     assert registry["trashnet"].role == "train"
-    assert registry["trashnet"].box_order == ("birefnet", "dino", "centerbox")
-    assert registry["alistairking-household"].box_order == ("birefnet", "dino", "centerbox")
+    # All sources use the pipeline-default box order (DINO-primary): GPU BiRefNet
+    # is unavailable on Colab, so segmentation-primary is not configured.
+    assert registry["trashnet"].box_order == ()
+    assert registry["alistairking-household"].box_order == ()
     assert registry["drinking-waste"].box_order == ()
     assert registry["realwaste"].box_order == ()
     assert registry["garbage-detection"].box_order == ()
