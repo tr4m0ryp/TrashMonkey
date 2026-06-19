@@ -39,7 +39,7 @@ train:
   warmup_epochs: 3.0
   batch: 16
   imgsz: 640
-  patience: 50
+  patience: 30        # plateaus ~epoch 60; 30 ends the run earlier with no loss to the best checkpoint
   close_mosaic: 10
   cache: disk
   amp: true
