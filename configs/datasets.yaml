@@ -78,10 +78,9 @@ sources:
       glass: glass         # 501
       trash: DROP          # 137 -- maps to none of the six target classes (F17)
     drops: [trash]
-    # cls source -> autobox each image. Try BiRefNet salient-object matting first
-    # (clean white posterboard => crisp foreground), then Grounding DINO, then the
-    # centerbox fallback.
-    box_order: [birefnet, dino, centerbox]
+    # box_order left at the pipeline default (DINO-primary, BiRefNet[cpu] fallback):
+    # GPU BiRefNet is unavailable on Colab (onnxruntime-gpu CUDA mismatch), so
+    # routing the bulk through CPU BiRefNet would be the slow tail of the build.
 
   - name: drinking-waste
     fetcher:
