@@ -256,15 +256,52 @@ def _autobox_run(ctx: PipelineContext) -> str:
         done["n"] += count
         _report()
 
+    # Build each heavy backend ONCE and reuse it across every group instead of
+    # reloading the ~1GB BiRefNet session per group and the DINO model per
+    # source. The wrappers stay lazy: a backend is built on the first image that
+    # actually reaches that method, then cached (per class for DINO -- the prompt
+    # differs by class -- and globally for BiRefNet, which is prompt-free).
+    birefnet_holder: dict[str, MaskFn] = {}
+
+    def shared_birefnet(image_path: Path) -> npt.NDArray[np.uint8]:
+        fn = birefnet_holder.get("fn")
+        if fn is None:
+            fn = ctx.birefnet_mask or build_birefnet_backend()
+            birefnet_holder["fn"] = fn
+        return fn(image_path)
+
+    dino_holder: dict[str, DinoPredictFn] = {}
+
+    def cached_dino(cache_key: str, prompt: str) -> DinoPredictFn:
+        def predict(image_path: Path) -> Sequence[Detection]:
+            fn = dino_holder.get(cache_key)
+            if fn is None:
+                fn = ctx.dino_predict or build_dino_backend(prompt, box_threshold=MIN_BOX_CONFIDENCE)
+                dino_holder[cache_key] = fn
+            return fn(image_path)
+
+        return predict
+
     groups: dict[str, int] = {}
     methods: dict[str, int] = {}
     for class_id, class_name in enumerate(ctx.cfg.classes):
-        records = _box_class(ctx, class_name, class_id, cls_sources, on_image, advance)
+        records = _box_class(
+            ctx,
+            class_name,
+            class_id,
+            cls_sources,
+            cached_dino(class_name, PROMPTS[class_name]),
+            shared_birefnet,
+            on_image,
+            advance,
+        )
         if records:
             groups[class_name] = len(records)
         for record in records:
             methods[record.method] = methods.get(record.method, 0) + 1
-    wild = _box_wilderness(ctx, on_image, advance)
+    wild = _box_wilderness(
+        ctx, cached_dino(WILDERNESS_GROUP, WILDERNESS_PROMPT), shared_birefnet, on_image, advance
+    )
     if wild:
         groups[WILDERNESS_GROUP] = len(wild)
     for record in wild:
