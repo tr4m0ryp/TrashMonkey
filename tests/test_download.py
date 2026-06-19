@@ -183,6 +183,23 @@ def test_duplicate_source_names_rejected(tmp_path: Path) -> None:
 # --- fetch + extract + manifest --------------------------------------------
 
 
+def test_download_sources_parallel_keeps_input_order(tmp_path: Path) -> None:
+    raw_root = tmp_path / "raw"
+    specs = []
+    for i in range(3):
+        archive = make_zip(tmp_path, {f"glass/a{i}.jpg": "AA"}, name=f"s{i}.zip")
+        specs.append(
+            parse_source(
+                raw_entry(name=f"src{i}", fetcher={"kind": "local", "ref": str(archive), "sha256": None}),
+                TARGET_CLASSES,
+            )
+        )
+    results = download_sources(specs, raw_root)
+    assert [r.source for r in results] == ["src0", "src1", "src2"]  # input order preserved
+    assert all(r.action == "fetched" for r in results)
+    assert all((raw_root / f"src{i}" / MANIFEST_NAME).is_file() for i in range(3))
+
+
 def test_local_fetch_extracts_and_writes_manifest(tmp_path: Path) -> None:
     archive = make_zip(tmp_path, {"glass/a.jpg": "AA", "glass/b.jpg": "BB", "trash/c.jpg": "CC"})
     raw_root = tmp_path / "raw"
