@@ -51,7 +51,7 @@ def test_train_section(config: Config) -> None:
     t = config.train
     assert (t.epochs, t.optimizer, t.batch, t.imgsz) == (100, "AdamW", 16, 640)
     assert (t.lr0, t.lrf, t.momentum, t.weight_decay) == (0.001, 0.01, 0.9, 0.0005)
-    assert (t.warmup_epochs, t.patience, t.close_mosaic) == (3.0, 50, 10)
+    assert (t.warmup_epochs, t.patience, t.close_mosaic) == (3.0, 30, 10)
     assert (t.cache, t.amp, t.deterministic, t.freeze, t.workers) == ("disk", True, True, None, 8)
     assert t.cos_lr is False
     assert t.cls_pw == 0.0  # native class weighting OFF by default (backward-compatible)
