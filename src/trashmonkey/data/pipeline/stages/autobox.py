@@ -138,6 +138,8 @@ def _box_class(
     class_name: str,
     class_id: int,
     cls_sources: frozenset[str],
+    dino: DinoPredictFn,
+    birefnet: MaskFn,
     on_image: ProgressFn | None = None,
     advance: Callable[[int], None] | None = None,
 ) -> list[BoxRecord]:
