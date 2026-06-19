@@ -174,8 +174,8 @@ def _box_class(
                 source=source,
                 # Per-source method order from the registry (() = pipeline default).
                 box_order=cast("tuple[Method, ...]", ctx.registry[source].box_order),
-                dino_predict=ctx.dino_predict,
-                birefnet_mask=ctx.birefnet_mask,
+                dino_predict=dino,  # shared, built once per class
+                birefnet_mask=birefnet,  # shared, built once globally
                 progress=on_image,
             )
             for image in by_source[source]:  # alongside copies feed scan_remapped
