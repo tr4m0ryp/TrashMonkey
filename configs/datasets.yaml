@@ -174,9 +174,8 @@ sources:
     # Studio "default" split is clean single-object; real_world is also
     # single-object framing (T2).
     background: clean
-    # cls source -> autobox each image. Studio single-object frames matte cleanly,
-    # so BiRefNet first, then Grounding DINO, then the centerbox fallback.
-    box_order: [birefnet, dino, centerbox]
+    # box_order left at the pipeline default (DINO-primary) -- see trashnet: GPU
+    # BiRefNet is unavailable on Colab, so it stays the CPU fallback only.
     mapping:
       # All 30 category folders enumerated via the Kaggle files API
       # (2026-06-10, 500 images each). Mapping is TOTAL over that list (T1):
