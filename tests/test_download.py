@@ -183,7 +183,8 @@ def test_duplicate_source_names_rejected(tmp_path: Path) -> None:
 # --- fetch + extract + manifest --------------------------------------------
 
 
-def test_download_sources_parallel_keeps_input_order(tmp_path: Path) -> None:
+def test_download_sources_fetches_all_in_order(tmp_path: Path) -> None:
+    # Sequential by design (the kaggle CLI is not concurrency-safe); order kept.
     raw_root = tmp_path / "raw"
     specs = []
     for i in range(3):
@@ -195,7 +196,7 @@ def test_download_sources_parallel_keeps_input_order(tmp_path: Path) -> None:
             )
         )
     results = download_sources(specs, raw_root)
-    assert [r.source for r in results] == ["src0", "src1", "src2"]  # input order preserved
+    assert [r.source for r in results] == ["src0", "src1", "src2"]
     assert all(r.action == "fetched" for r in results)
     assert all((raw_root / f"src{i}" / MANIFEST_NAME).is_file() for i in range(3))
 
