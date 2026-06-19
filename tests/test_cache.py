@@ -54,11 +54,35 @@ def test_fingerprint_changes_when_eval_split_changes(tmp_path: Path) -> None:
     assert dataset_fingerprint(config, datasets) != before
 
 
+def test_fingerprint_changes_when_clean_holdout_changes(tmp_path: Path) -> None:
+    # The clean-holdout fraction reshapes the splits -> must invalidate the cache.
+    config, datasets = _config_pair(tmp_path)
+    before = dataset_fingerprint(config, datasets)
+    config.write_text(config.read_text().replace("fraction: 0.15", "fraction: 0.25"))
+    assert dataset_fingerprint(config, datasets) != before
+
+
+def test_fingerprint_changes_when_label_filter_changes(tmp_path: Path) -> None:
+    # The label filter changes which items survive -> must invalidate the cache.
+    config, datasets = _config_pair(tmp_path)
+    before = dataset_fingerprint(config, datasets)
+    config.write_text(config.read_text().replace("min_confidence: 0.3", "min_confidence: 0.5"))
+    assert dataset_fingerprint(config, datasets) != before
+
+
 def test_fingerprint_ignores_unrelated_config_fields(tmp_path: Path) -> None:
     # Changing a training knob must NOT invalidate the dataset cache.
     config, datasets = _config_pair(tmp_path)
     before = dataset_fingerprint(config, datasets)
     config.write_text(config.read_text().replace("batch: 16", "batch: 64"))
+    assert dataset_fingerprint(config, datasets) == before
+
+
+def test_fingerprint_ignores_escalation_floors(tmp_path: Path) -> None:
+    # Escalation floors gate model-size selection, not the dataset -> no rebuild.
+    config, datasets = _config_pair(tmp_path)
+    before = dataset_fingerprint(config, datasets)
+    config.write_text(config.read_text().replace("overall_map50: 0.8", "overall_map50: 0.9"))
     assert dataset_fingerprint(config, datasets) == before
 
 
