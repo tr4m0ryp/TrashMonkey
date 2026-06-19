@@ -66,7 +66,7 @@ def test_fingerprint_changes_when_label_filter_changes(tmp_path: Path) -> None:
     # The label filter changes which items survive -> must invalidate the cache.
     config, datasets = _config_pair(tmp_path)
     before = dataset_fingerprint(config, datasets)
-    config.write_text(config.read_text().replace("min_confidence: 0.3", "min_confidence: 0.5"))
+    config.write_text(config.read_text().replace("min_confidence: 0.30", "min_confidence: 0.50"))
     assert dataset_fingerprint(config, datasets) != before
 
 
