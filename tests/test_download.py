@@ -22,6 +22,7 @@ from trashmonkey.data.download import (
     FetcherSpec,
     SourceSpec,
     download_source,
+    download_sources,
     load_registry,
     parse_source,
 )
