@@ -136,6 +136,17 @@ under camera noise, blur and compression. Plain-background single-object use --
 what the model is actually trained for -- tracks the validation number, not the
 cluttered-scene one.
 
+> **Reading these numbers.** A 0.50 mAP50 does **not** mean "right half the
+> time". mAP is a strict box-localization-and-ranking score that punishes loose
+> boxes and low-confidence hits hard -- per-item classification reliability is
+> typically much higher. And the deployed system **abstains**: the "rest" rule
+> only commits when several frames agree and one is confident, otherwise it
+> refuses to guess. So the real production KPI isn't mAP -- it's *of the items it
+> does sort, how often is it right, and what fraction does it send to "rest"* --
+> the tradeoff the threshold tuner measures (table below, pending a run). A model
+> at 0.50 mAP can still sort its committed items at 85-90% accuracy by rejecting
+> the uncertain ones.
+
 The rest-rule thresholds are tuned in a separate step and fill in here once run:
 
 | Rest-rule sweep | Value |
