@@ -9,7 +9,9 @@ ultralytics val at the degraded copies.
 
 from __future__ import annotations
 
+import os
 import shutil
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -59,18 +61,39 @@ def _degrade_file(src: Path, dest: Path, severity: int, seed: int) -> None:
         raise EvalError(f"cannot write degraded image: {dest}")
 
 
+def _degrade_job(job: tuple[Path, Path, int, int]) -> None:
+    """Pool entry point: a single (src, dest, severity, seed) degrade+write.
+
+    ``degrade_image`` reseeds from ``(seed, severity)`` per call with no global
+    state, so the output is byte-identical regardless of worker or order.
+    """
+    src, dest, severity, seed = job
+    _degrade_file(src, dest, severity, seed)
+
+
 def materialize_severity(
-    data_yaml: Path, splits: tuple[str, ...], severity: int, seed: int, work_dir: Path
+    data_yaml: Path,
+    splits: tuple[str, ...],
+    severity: int,
+    seed: int,
+    work_dir: Path,
+    *,
+    workers: int | None = None,
 ) -> Path:
     """Write degraded copies of ``splits`` at one severity; returns the yaml.
 
     Labels are copied verbatim (degradation never moves a box). The emitted
     yaml carries a 'train' key only because ultralytics ``check_det_dataset``
     requires it -- nothing ever trains on these copies.
+
+    The per-image degrade+encode is CPU-bound and is the dominant eval cost, so
+    it fans out across ``workers`` processes (default ``os.cpu_count()``); set
+    ``workers=1`` to force the serial path. Output is byte-identical either way.
     """
     spec = load_dataset_spec(data_yaml)
     root = work_dir / f"severity_{severity}"
     label_root = Path(spec["path"]) / "labels"
+    jobs: list[tuple[Path, Path, int, int]] = []
     for split in splits:
         images = split_images(data_yaml, split)
         image_dest = root / "images" / split
@@ -78,11 +101,21 @@ def materialize_severity(
         image_dest.mkdir(parents=True, exist_ok=True)
         label_dest.mkdir(parents=True, exist_ok=True)
         for src in images:
-            _degrade_file(src, image_dest / (src.stem + ".png"), severity, seed)
+            jobs.append((src, image_dest / (src.stem + ".png"), severity, seed))
             label_src = label_root / split / (src.stem + ".txt")
             if not label_src.is_file():
                 raise EvalError(f"label file missing for {src.name}: {label_src}")
             shutil.copy2(label_src, label_dest / label_src.name)
+
+    workers = max(1, workers if workers is not None else (os.cpu_count() or 1))
+    if workers > 1 and len(jobs) > 1:
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            # Drain the iterator so any worker EvalError propagates here.
+            for _ in pool.map(_degrade_job, jobs, chunksize=8):
+                pass
+    else:
+        for job in jobs:
+            _degrade_job(job)
 
     out_spec: dict[str, Any] = {"path": str(root.resolve())}
     out_spec["train"] = f"images/{splits[0]}"  # required key, never used

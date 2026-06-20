@@ -63,8 +63,27 @@ def _free_gpu() -> None:
 
 
 def _run_val(
-    model: Any, data_yaml: Path, split: str, cfg: Config, out_dir: Path, name: str
+    model: Any,
+    data_yaml: Path,
+    split: str,
+    cfg: Config,
+    out_dir: Path,
+    name: str,
+    *,
+    batch: int | None = None,
+    workers: int | None = None,
+    half: bool = False,
 ) -> Any:
+    # batch/workers raise GPU + dataloader throughput without changing outputs
+    # (inference uses running BN stats; NMS is per-image). ``half`` (FP16) is the
+    # only knob that perturbs the metrics, so it stays opt-in.
+    extra: dict[str, Any] = {}
+    if batch is not None:
+        extra["batch"] = batch
+    if workers is not None:
+        extra["workers"] = workers
+    if half:
+        extra["half"] = True
     return model.val(
         data=str(data_yaml),
         split=split,
@@ -74,6 +93,7 @@ def _run_val(
         verbose=False,
         project=str(out_dir / "runs"),
         name=name,
+        **extra,
     )
 
 
@@ -137,6 +157,10 @@ def evaluate(
     *,
     out_dir: Path | None = None,
     work_dir: Path | None = None,
+    degrade_workers: int | None = None,
+    val_batch: int | None = None,
+    val_workers: int | None = None,
+    half: bool = False,
 ) -> EvalReport:
     """Run the three tiers, the escalation check, and the detections dump.
 
@@ -163,11 +187,12 @@ def evaluate(
     import ultralytics  # lazy: the package must import without it installed
 
     model = ultralytics.YOLO(str(best_pt))
+    val_opts = {"batch": val_batch, "workers": val_workers, "half": half}
 
-    val_results = _run_val(model, data_yaml, "val", cfg, out_dir, "val")
+    val_results = _run_val(model, data_yaml, "val", cfg, out_dir, "val", **val_opts)
     val_tier = _tier_report(val_results, "val", "val", CLEAN_SEVERITY, out_dir)
     _free_gpu()
-    test1_results = _run_val(model, data_yaml, "test", cfg, out_dir, "test1")
+    test1_results = _run_val(model, data_yaml, "test", cfg, out_dir, "test1", **val_opts)
     test1_tier = _tier_report(test1_results, "test1", "test", CLEAN_SEVERITY, out_dir)
     _free_gpu()
 
@@ -176,11 +201,11 @@ def evaluate(
     for severity in cfg.eval.test2_severities:
         # The val split is degraded in the same pass for the tuner dump (T9).
         severity_yaml = materialize_severity(
-            data_yaml, ("test", "val"), severity, cfg.seed, work_dir
+            data_yaml, ("test", "val"), severity, cfg.seed, work_dir, workers=degrade_workers
         )
         severity_yamls[severity] = severity_yaml
         tier = f"test2_s{severity}"
-        results = _run_val(model, severity_yaml, "test", cfg, out_dir, tier)
+        results = _run_val(model, severity_yaml, "test", cfg, out_dir, tier, **val_opts)
         test2_tiers.append(_tier_report(results, tier, "test", severity, out_dir))
         _free_gpu()
     severity_curve = tuple(
@@ -193,12 +218,12 @@ def evaluate(
     clean_tier: TierReport | None = None
     clean_results: Any = None
     if _has_split(data_yaml, "clean_test"):
-        clean_results = _run_val(model, data_yaml, "clean_test", cfg, out_dir, "clean")
+        clean_results = _run_val(model, data_yaml, "clean_test", cfg, out_dir, "clean", **val_opts)
         clean_tier = _tier_report(clean_results, "clean", "clean_test", CLEAN_SEVERITY, out_dir)
         _free_gpu()
     wild_tier: TierReport | None = None
     if _has_split(data_yaml, "wild_test"):
-        wild_results = _run_val(model, data_yaml, "wild_test", cfg, out_dir, "wild")
+        wild_results = _run_val(model, data_yaml, "wild_test", cfg, out_dir, "wild", **val_opts)
         wild_tier = _tier_report(wild_results, "wild", "wild_test", CLEAN_SEVERITY, out_dir)
         _free_gpu()
 
