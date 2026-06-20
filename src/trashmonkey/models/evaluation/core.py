@@ -22,6 +22,7 @@ from trashmonkey.models.evaluation.curves import (
     save_curves,
 )
 from trashmonkey.models.evaluation.degraded import (
+    IMAGE_SUFFIXES,
     load_dataset_spec,
     materialize_severity,
     split_images,
@@ -131,10 +132,25 @@ def _tier_report(
     )
 
 
-def _has_split(data_yaml: Path, split: str) -> bool:
-    """Whether ``data_yaml`` defines ``split`` (the emit only writes non-empty
-    splits, so presence of the key means the split has members)."""
+def _split_declared(data_yaml: Path, split: str) -> bool:
+    """Whether ``data_yaml`` lists ``split`` as a key (regardless of disk state)."""
     return split in load_dataset_spec(data_yaml)
+
+
+def _has_split(data_yaml: Path, split: str) -> bool:
+    """Whether ``split`` is declared in ``data_yaml`` AND materialized on disk.
+
+    The emit normally writes a split key only for non-empty splits, but a
+    restored or older cached dataset can carry a stale key whose image directory
+    is absent -- ultralytics then raises ``FileNotFoundError`` mid-eval. The val
+    harness reads from disk, so the guard must too."""
+    spec = load_dataset_spec(data_yaml)
+    if split not in spec:
+        return False
+    image_dir = Path(spec["path"]) / str(spec[split])
+    if not image_dir.is_dir():
+        return False
+    return any(p.suffix.lower() in IMAGE_SUFFIXES for p in image_dir.iterdir())
 
 
 def _headline(tier: TierReport) -> dict[str, Any]:
@@ -221,11 +237,23 @@ def evaluate(
         clean_results = _run_val(model, data_yaml, "clean_test", cfg, out_dir, "clean", **val_opts)
         clean_tier = _tier_report(clean_results, "clean", "clean_test", CLEAN_SEVERITY, out_dir)
         _free_gpu()
+    elif _split_declared(data_yaml, "clean_test"):
+        print(
+            "WARNING: dataset yaml declares clean_test but its image directory is "
+            "missing on disk -- skipping the CLEAN tier; the deployment headline and "
+            "escalation gate fall back to VAL. Rebuild/re-archive the dataset to "
+            "restore the deployment-matched tier."
+        )
     wild_tier: TierReport | None = None
     if _has_split(data_yaml, "wild_test"):
         wild_results = _run_val(model, data_yaml, "wild_test", cfg, out_dir, "wild", **val_opts)
         wild_tier = _tier_report(wild_results, "wild", "wild_test", CLEAN_SEVERITY, out_dir)
         _free_gpu()
+    elif _split_declared(data_yaml, "wild_test"):
+        print(
+            "WARNING: dataset yaml declares wild_test but its image directory is "
+            "missing on disk -- skipping the WILD stress tier."
+        )
 
     # The escalation gate reads the CLEAN tier (deployment distribution); when
     # clean_test is absent it falls back to VAL so old runs still evaluate.

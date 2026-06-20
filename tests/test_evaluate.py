@@ -174,6 +174,25 @@ def _evaluate(
     return evaluate(cfg, best_pt, data_yaml, manifest, out_dir=tmp_path / "evaluation")
 
 
+def test_skips_clean_and_wild_when_image_dirs_absent_on_disk(
+    cfg: Config, dataset: tuple[Path, Path, Path], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A stale cached dataset can declare clean_test/wild_test in its yaml while
+    the image directories are gone -- the eval must skip those tiers (not raise)
+    and fall back to VAL for the headline + escalation gate."""
+    import shutil
+
+    _install_fake_ultralytics(monkeypatch)
+    data_yaml, manifest, best_pt = dataset
+    root = data_yaml.parent
+    shutil.rmtree(root / "images" / "clean_test")
+    shutil.rmtree(root / "images" / "wild_test")
+    report = evaluate(cfg, best_pt, data_yaml, manifest, out_dir=tmp_path / "evaluation")
+    assert report.clean is None
+    assert report.wild is None
+    assert report.headline["tier"] == "val"
+
+
 # --- tier orchestration (T6) ------------------------------------------------------
 
 
