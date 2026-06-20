@@ -3,6 +3,7 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tr4m0ryp/TrashMonkey/blob/main/notebooks/manager.ipynb)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Model](https://img.shields.io/badge/model-YOLO11n-orange.svg)
+![VAL mAP50](https://img.shields.io/badge/VAL%20mAP50-0.81-success.svg)
 ![Seed](https://img.shields.io/badge/seed-42-green.svg)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
